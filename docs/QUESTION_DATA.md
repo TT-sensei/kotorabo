@@ -1,6 +1,17 @@
 # 問題データ仕様 v1.0
 
-問題文例は `js/data/questions.js` の `QUESTIONS` に追加する。画面や出題ロジックへ文例を直接書かない。
+問題文例は `js/data/question-sets/` のLAB別ファイルへ追加する。初回診断に使う既存問題は `js/data/questions.js` に置く。画面や出題ロジックへ文例を直接書かない。
+
+| LAB | 追加問題のファイル |
+|---|---|
+| ことば | `question-sets/words.js` |
+| 文づくり | `question-sets/sentence.js` |
+| つながり | `question-sets/connection.js` |
+| 文章 | `question-sets/passage.js` |
+
+各ファイルはLevel 1〜6の順に並べる。問題の共通項目は `question-sets/helpers.js` が補うため、文例を直すときは対象問題の配列だけを編集する。
+
+LAB別ファイルでは、読みやすさのため `best` の選択肢を先に書いてよい。画面上のA〜Dは問題IDを使って安定的に並べ替えられ、正解位置が一か所へ偏らない。
 
 ## 主な項目
 
