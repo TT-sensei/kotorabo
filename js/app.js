@@ -64,11 +64,11 @@ function homeTemplate() {
   const reviewCount = p.filter((item) => item.needsReview).length;
   return `<main class="home-page"><section class="research-hero"><div><p class="eyebrow light"><i></i> きょうのきみにぴったり</p><h1>今日のチャレンジ</h1><p>${reviewCount ? "前に迷った問題も、ちがうお話でもう一度チャレンジ！" : "4つのラボをめぐって、ことばパワーをのばそう！"}</p></div><div class="flask-art" aria-hidden="true"><span>あ</span><span>文</span><span>→</span></div></section>
     <section class="session-picker"><div class="section-heading"><div><p>コースをえらぼう</p><h2>どれにチャレンジする？</h2></div><span>途中で休んでもだいじょうぶ</span></div><div class="session-grid">
-      <button data-size="3"><span class="session-icon bolt">↯</span><div><small>ちょこっと</small><strong>3問</strong><p>約2分・すきま時間に</p></div><b>→</b></button>
-      <button data-size="5" class="recommended"><em>おすすめ</em><span class="session-icon scope">◎</span><div><small>いつもの</small><strong>5問</strong><p>おさらい＋ちょいむず</p></div><b>→</b></button>
-      <button data-size="10"><span class="session-icon flame">♨</span><div><small>たっぷり</small><strong>10問</strong><p>約8分・どんどん挑戦</p></div><b>→</b></button>
+      <button data-size="3"><span class="session-icon bolt">⚡</span><div><small>サクッと</small><strong>3問</strong><p>まずは気軽にやってみよう</p></div><b>→</b></button>
+      <button data-size="5" class="recommended"><em>おすすめ</em><span class="session-icon scope">🔬</span><div><small>いいとこどり</small><strong>5問</strong><p>おさらい＋ちょいむず</p></div><b>→</b></button>
+      <button data-size="10"><span class="session-icon flame">🔥</span><div><small>ぐんぐん</small><strong>10問</strong><p>ことばパワーをたっぷりためよう</p></div><b>→</b></button>
     </div></section>
-    <section class="lab-overview"><div class="section-heading"><div><p>4つのラボ</p><h2>どの力ものびていくよ</h2></div><button class="text-button" data-action="carte">できたことを見る →</button></div><div class="lab-grid">${labKeys.map((lab) => { const info = labReadiness(p, lab); return `<article class="lab-card ${LABS[lab].color}"><div><span>${LABS[lab].icon}</span><small>${info.label}</small></div><h3>${LABS[lab].label}</h3><p>${LABS[lab].question}</p><i><b style="width:${Math.max(4, info.value)}%"></b></i></article>`; }).join("")}</div><p class="history-note">これまでに ${state.attempts.length}回、ことばをじっくり考えたよ！</p></section></main>`;
+    <section class="lab-overview"><div class="section-heading"><div><p>4つのラボをのぞいてみよう</p><h2>できることが、どんどんふえる！</h2></div><button class="text-button" data-action="carte">✨ できたことを見る →</button></div><div class="lab-grid">${labKeys.map((lab) => { const info = labReadiness(p, lab); return `<article class="lab-card ${LABS[lab].color}"><div><span>${LABS[lab].icon}</span><small>${info.label}</small></div><h3>${LABS[lab].label}</h3><p>${LABS[lab].question}</p><i><b style="width:${Math.max(4, info.value)}%"></b></i></article>`; }).join("")}</div><p class="history-note">👏 これまでに ${state.attempts.length}回、ことばをじっくり考えたよ！</p></section></main>`;
 }
 
 function startQueue(items, screen) {
@@ -91,7 +91,7 @@ function questionTemplate() {
   const canRetry = state.quality !== "best" && state.tryNumber < 2;
   return `<main class="research-page"><section class="research-topline"><div><span class="lab-token ${lab.color}">${lab.icon}</span><div><small>${lab.label}</small><strong>${roleLabel[item.role]}</strong></div></div><p><b>${state.position + 1}</b> / ${state.queue.length}</p></section><div class="research-progress"><i style="width:${((state.position + 1) / state.queue.length) * 100}%"></i></div>
     <section class="question-card"><div class="question-meta"><span>きょうのポイント</span><b>${q.subskill}</b><small>チャレンジ：${DEPTH_LABELS[q.depth]}</small></div>
-    ${(q.audience || q.goal) ? `<div class="situation-strip">${q.audience ? `<span><b>相手</b>${q.audience}</span>` : ""}${q.goal ? `<span><b>目的</b>${q.goal}</span>` : ""}</div>` : ""}
+    ${(q.audience || q.goal) ? `<div class="situation-strip">${q.audience ? `<span><b>だれに？</b>${q.audience}</span>` : ""}${q.goal ? `<span><b>何のため？</b>${q.goal}</span>` : ""}</div>` : ""}
     ${q.context ? `<p class="question-context">${q.context}</p>` : ""}<h1>${q.prompt}</h1><div class="option-grid">${q.options.map((option, index) => { const chosen = state.selectedId === option.id; return `<button data-option="${option.id}" class="${chosen ? `selected ${state.quality}` : ""}" ${(state.quality === "best" || (state.quality && !canRetry)) ? "disabled" : ""}><span>${String.fromCharCode(65 + index)}</span><strong>${option.text}</strong>${chosen && state.quality ? `<b>${qualityCopy[state.quality].mark}</b>` : ""}</button>`; }).join("")}</div>
     ${!state.quality ? `<button class="hint-button" data-action="hint" ${state.usedHint ? "disabled" : ""}>💡 ${state.usedHint ? "ヒントを表示中" : "ヒントを見る"}</button>` : ""}
     ${state.showHint && !state.quality ? `<div class="hint-box"><b>ちょこっとヒント</b><p>${q.hint}</p></div>` : ""}
