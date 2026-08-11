@@ -42,8 +42,9 @@ export function buildSession(bank, profile, attempts, size) {
   const progress = buildProgress(attempts);
   const recentIds = new Set(attempts.slice(-5).map((item) => item.questionId));
   const seed = `${new Date().toISOString().slice(0, 10)}:${attempts.length}:${size}`;
+  const targetLevel = profile.challengeLevel ?? profile.grade;
   // diagnosticは「初回にも使う」という主用途。診断後の定着確認にも再利用できます。
-  const available = bank.filter((q) => q.gradeMin <= profile.grade && q.contentLevel <= Math.min(6, profile.grade + 1));
+  const available = bank.filter((q) => q.gradeMin <= targetLevel && q.contentLevel <= Math.min(6, targetLevel + 1));
   const used = new Set();
   const result = [];
   const weak = new Set(progress.filter((p) => p.needsReview).map((p) => p.skill));
@@ -69,13 +70,52 @@ export function buildSession(bank, profile, attempts, size) {
     if (role === "retry") take(role, (q) => weak.has(q.skill)) || take(role, (q) => known.has(q.skill));
     else if (role === "recall") take(role, (q) => known.has(q.skill));
     else if (role === "transfer") take(role, (q) => q.purpose === "transfer" && (!strong.size || strong.has(q.skill))) || take(role, (q) => q.purpose === "transfer");
-    else if (role === "stretch") take(role, (q) => q.contentLevel === Math.min(6, profile.grade + 1)) || take(role, (q) => q.depth >= 4);
+    else if (role === "stretch") take(role, (q) => q.contentLevel === Math.min(6, targetLevel + 1)) || take(role, (q) => q.depth >= 4);
     else take(role, (q) => !known.has(q.skill)) || take(role, () => true);
   });
   while (result.length < size && take("current", () => true)) { /* 候補がある限り追加 */ }
   return result.slice(0, size);
 }
 
-export function findDelayedRetry(bank, current, usedIds, grade) {
-  return bank.find((q) => q.id !== current.id && !usedIds.has(q.id) && q.skill === current.skill && q.gradeMin <= grade && (q.similarGroup !== current.similarGroup || q.transferGroup === current.transferGroup));
+export function buildFocusSession(bank, profile, attempts, skillId, size = 5) {
+  const skill = SKILL_MAP.find((item) => item.id === skillId);
+  if (!skill) return [];
+
+  const targetLevel = profile.challengeLevel ?? profile.grade;
+  const progress = new Map(buildProgress(attempts).map((item) => [item.skill, item]));
+  const recentIds = new Set(attempts.slice(-5).map((item) => item.questionId));
+  const seed = `focus:${skillId}:${targetLevel}:${attempts.length}:${size}`;
+  const candidates = bank.filter((question) => question.lab === skill.lab);
+
+  const ranked = stableSort(candidates, seed).sort((a, b) => {
+    const score = (question) => {
+      const exact = question.skill === skillId ? 1000 : 0;
+      const learning = progress.get(question.skill);
+      const review = learning?.needsReview ? 120 : 0;
+      const unseen = learning?.attempts ? 0 : 35;
+      const nearby = 120 - Math.abs(question.contentLevel - targetLevel) * 24;
+      const fresh = recentIds.has(question.id) ? -80 : 0;
+      return exact + review + unseen + nearby + fresh;
+    };
+    return score(b) - score(a);
+  });
+
+  const exact = ranked.filter((question) => question.skill === skillId);
+  const related = ranked.filter((question) => question.skill !== skillId);
+  const chosen = [];
+  let exactIndex = 0;
+  while (chosen.length < size && exactIndex < exact.length) {
+    chosen.push(exact[exactIndex]);
+    exactIndex += 1;
+  }
+  for (const question of related) {
+    if (chosen.length >= size) break;
+    chosen.push(question);
+  }
+
+  return chosen.slice(0, size).map((question) => ({ questionId: question.id, role: "focus" }));
+}
+
+export function findDelayedRetry(bank, current, usedIds, level) {
+  return bank.find((q) => q.id !== current.id && !usedIds.has(q.id) && q.skill === current.skill && q.gradeMin <= level && (q.similarGroup !== current.similarGroup || q.transferGroup === current.transferGroup));
 }
