@@ -33,9 +33,9 @@ export function buildProgress(attempts) {
 
 export function labReadiness(progress, lab) {
   const items = progress.filter((item) => item.lab === lab && item.attempts > 0);
-  if (!items.length) return { label: "ここから研究", value: 0 };
+  if (!items.length) return { label: "ここからスタート！", value: 0 };
   const value = Math.round(items.reduce((sum, item) => sum + Math.min(6, item.stableDepth), 0) / (items.length * 6) * 100);
-  return { label: value >= 70 ? "ちがう場面へ挑戦" : value >= 40 ? "いい感じ" : "少しずつ挑戦", value };
+  return { label: value >= 70 ? "ちがうお話へ！" : value >= 40 ? "いい感じ！" : "少しずついこう", value };
 }
 
 export function buildSession(bank, profile, attempts, size) {
