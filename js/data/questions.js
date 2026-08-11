@@ -1,4 +1,9 @@
-// 文例を直すときは、このファイルだけを編集します。
+import { WORD_QUESTION_DATA } from "./question-sets/words.js";
+import { SENTENCE_QUESTION_DATA } from "./question-sets/sentence.js";
+import { CONNECTION_QUESTION_DATA } from "./question-sets/connection.js";
+import { PASSAGE_QUESTION_DATA } from "./question-sets/passage.js";
+
+// 既存問題はこのファイル、新しい120問は question-sets/ のLAB別ファイルで編集します。
 // idは変えず、内容や判定基準を直したらversionを1つ上げます。
 const make = (id, data) => ({
   id, version: 1, format: "choice", thinkingTags: [], crossTags: [],
@@ -39,6 +44,10 @@ export const QUESTIONS = [
   make("p-structure-001", { lab:"passage", skill:"passage.structure", subskill:"主張・理由・具体例", contentLevel:4, depth:2, purpose:"diagnostic", thinkingTags:["構造","主張"], theme:"学校生活", gradeMin:4, context:"① 朝読書を続けるとよいと思います。② なぜなら、落ち着いて一日を始められるからです。③ 先週は、朝読書のあと静かに授業を始められました。", prompt:"筆者の主張にあたる文は？", options:[["①","best"],["②","incorrect"],["③","incorrect"],["②と③","incorrect"]], hint:"筆者が「こうしたほうがよい」と伝えたい考えを探そう。", explanation:"①が主張、②が理由、③が具体例です。", visual:["主張①","理由②・具体例③が支える","納得"] }),
   make("p-revision-001", { lab:"passage", skill:"passage.revision_design", subskill:"具体例を足す", contentLevel:5, depth:4, purpose:"practice", thinkingTags:["推敲","具体例"], crossTags:["読み手視点"], theme:"行事", gradeMin:5, context:"運動会では、みんなで協力できました。この経験をこれからも生かしたいです。", prompt:"「協力したこと」が伝わるよう、間に足す文は？", options:[["例えば、大玉送りでは声をかけ合い、落としたときもすぐに拾いました。","best"],["運動会は春にありました。","incorrect"],["とにかく、すごく協力しました。","acceptable","強く言っていますが、どんな協力かはまだ見えません。"],["わたしは青色が好きです。","incorrect"]], hint:"実際にだれが何をしたかが見える文を探そう。", explanation:"行動の具体例で、「協力した」というまとめに説得力が生まれます。" }),
   make("p-purpose-002", { lab:"passage", skill:"passage.revision_design", subskill:"目的に合う構成", contentLevel:6, depth:5, purpose:"transfer", thinkingTags:["目的","構成"], crossTags:["目的","相手"], theme:"提案", gradeMin:6, audience:"学校の先生と児童", goal:"校庭のごみを減らす取組を提案する", prompt:"提案文の構成として最も伝わりやすいものは？", options:[["結論 → 関係のない思い出 → あいさつ","incorrect"],["今の問題 → 調べた事実 → 解決案 → 期待できる効果","best"],["自分の感想 → 感想 → さらに感想","incorrect"],["解決案 → 今の問題","acceptable","意味は伝わりますが、必要性を先に示すと納得されやすくなります。"]], hint:"相手が「なぜ必要？」「どうする？」「どうよくなる？」と考える順を想像しよう。", explanation:"問題と事実で必要性を示し、解決案と効果へ進むと筋道が明確です。", tryIt:"学校を少しよくする提案を「問題→解決案」の二文で書いてみよう。" }),
+  ...WORD_QUESTION_DATA.map(([id, data]) => make(id, data)),
+  ...SENTENCE_QUESTION_DATA.map(([id, data]) => make(id, data)),
+  ...CONNECTION_QUESTION_DATA.map(([id, data]) => make(id, data)),
+  ...PASSAGE_QUESTION_DATA.map(([id, data]) => make(id, data)),
 ];
 
 export const DIAGNOSTIC_IDS = ["w-basic-feeling-001","w-see-range-001","s-core-subject-001","s-detail-order-001","c-sequence-001","c-reason-example-001","p-order-001","p-structure-001"];
