@@ -22,7 +22,8 @@
 
 | 変更したいもの | ファイル |
 |---|---|
-| 問題文・選択肢・ヒント・解説 | `js/data/questions.js` |
+| 既存の問題文・診断問題 | `js/data/questions.js` |
+| 追加120問（LAB別） | `js/data/question-sets/words.js` ほか3ファイル |
 | スキル名・LABとの対応 | `js/data/skill-map.js` |
 | 出題の組み合わせ | `js/core/engine.js` |
 | 保存方法 | `js/core/storage.js` |
@@ -30,6 +31,8 @@
 | 見た目 | `css/style.css` |
 
 問題を追加・調整するときは、先に [問題データ仕様](docs/QUESTION_DATA.md) を確認してください。
+
+追加問題は `js/data/question-sets/` 内で4LABに分けています。各ファイルはLevel 1〜6の順なので、文例や選択肢の微調整は対象LABのファイルだけで行えます。
 
 ## 設計資料
 

@@ -56,3 +56,37 @@ test("特訓モードは選んだSKILLなら学年より上の問題も使える
   const questions = session.map((item) => QUESTIONS.find((question) => question.id === item.questionId));
   assert.ok(questions.some((question) => question.skill === "words.abstract_objective" && question.contentLevel > 1));
 });
+
+test("追加問題は4LAB・6レベルに各5問ずつある", () => {
+  const added = QUESTIONS.filter((question) => question.id.startsWith("kb2-"));
+  assert.equal(added.length, 120);
+  for (const lab of Object.keys(LABS)) {
+    for (let level = 1; level <= 6; level += 1) {
+      assert.equal(
+        added.filter((question) => question.lab === lab && question.contentLevel === level).length,
+        5,
+        `${lab} / level ${level}`,
+      );
+    }
+  }
+});
+
+test("追加問題の全選択肢に個別フィードバックがある", () => {
+  const added = QUESTIONS.filter((question) => question.id.startsWith("kb2-"));
+  added.forEach((question) => {
+    question.options.forEach((option) => {
+      assert.ok(option.feedback, `${question.id} / ${option.id}`);
+      assert.ok(["best", "acceptable", "incorrect"].includes(option.quality), `${question.id} / ${option.id} quality`);
+    });
+  });
+});
+
+test("追加問題のbest位置がA〜Dに分散している", () => {
+  const counts = [0, 0, 0, 0];
+  QUESTIONS.filter((question) => question.id.startsWith("kb2-")).forEach((question) => {
+    question.options.forEach((option, index) => {
+      if (option.quality === "best") counts[index] += 1;
+    });
+  });
+  counts.forEach((count, index) => assert.ok(count >= 20, `choice ${index}: ${count}`));
+});
