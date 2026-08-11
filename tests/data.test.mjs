@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { QUESTIONS, DIAGNOSTIC_IDS } from "../js/data/questions.js";
 import { LABS, SKILL_MAP } from "../js/data/skill-map.js";
-import { buildSession } from "../js/core/engine.js";
+import { buildFocusSession, buildSession } from "../js/core/engine.js";
 
 test("問題IDが重複せず、必要なメタデータがそろっている", () => {
   assert.equal(new Set(QUESTIONS.map((q) => q.id)).size, QUESTIONS.length);
@@ -31,4 +31,28 @@ test("各学年で今日の研究3問・5問・10問を重複なく生成でき�
       assert.equal(new Set(session.map((item) => item.questionId)).size, size, `grade ${grade} / ${size} unique`);
     }
   }
+});
+
+test("学校の学年とは別のチャレンジレベルで出題できる", () => {
+  const session = buildSession(QUESTIONS, { grade: 6, challengeLevel: 1 }, [], 10);
+  const questions = session.map((item) => QUESTIONS.find((question) => question.id === item.questionId));
+  assert.ok(questions.every((question) => question.gradeMin <= 1));
+  assert.ok(questions.every((question) => question.contentLevel <= 2));
+});
+
+test("特訓モードは各SKILLを中心に同じLABから5問作れる", () => {
+  for (const skill of SKILL_MAP) {
+    const session = buildFocusSession(QUESTIONS, { grade: 3, challengeLevel: 3 }, [], skill.id, 5);
+    const questions = session.map((item) => QUESTIONS.find((question) => question.id === item.questionId));
+    assert.equal(session.length, 5, skill.id);
+    assert.equal(new Set(session.map((item) => item.questionId)).size, 5, `${skill.id}: unique`);
+    assert.ok(questions.every((question) => question.lab === skill.lab), `${skill.id}: same LAB`);
+    assert.ok(questions.some((question) => question.skill === skill.id), `${skill.id}: selected skill`);
+  }
+});
+
+test("特訓モードは選んだSKILLなら学年より上の問題も使える", () => {
+  const session = buildFocusSession(QUESTIONS, { grade: 1, challengeLevel: 1 }, [], "words.abstract_objective", 3);
+  const questions = session.map((item) => QUESTIONS.find((question) => question.id === item.questionId));
+  assert.ok(questions.some((question) => question.skill === "words.abstract_objective" && question.contentLevel > 1));
 });
