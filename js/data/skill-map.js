@@ -21,6 +21,6 @@ export const SKILL_MAP = [
   { id: "passage.revision_design", lab: "passage", label: "もっと伝わる文章", description: "不足やずれを直し、文章を設計する。" },
 ];
 
-export const DEPTH_LABELS = ["", "気づく", "分ける", "選ぶ", "直す", "使う", "別の場面でも使う"];
+export const DEPTH_LABELS = ["", "見つける", "なかま分け", "えらぶ", "直してみる", "使ってみる", "ちがうお話でも"];
 export const LEVEL_WORLDS = ["", "身近なことば", "詳しく伝える", "つながりを見つける", "分かりやすく伝える", "考えを組み立てる", "よりよく表現する"];
 export const getSkill = (id) => SKILL_MAP.find((skill) => skill.id === id);
