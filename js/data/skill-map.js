@@ -14,6 +14,7 @@ export const SKILL_MAP = [
   { id: "sentence.detail_order", lab: "sentence", label: "くわしく伝える", description: "情報、修飾、語順を整える。" },
   { id: "sentence.reader_design", lab: "sentence", label: "相手に伝わる文", description: "目的と相手に合わせて文を調整する。" },
   { id: "connection.sequence_cause", lab: "connection", label: "順序とわけ", description: "順序、原因、結果を捉える。" },
+  { id: "connection.connectives", lab: "connection", label: "接続詞を使い分ける", description: "だから・しかし・例えばなどを、文の関係に合わせて選ぶ。" },
   { id: "connection.logic_relations", lab: "connection", label: "文と文のつながり", description: "理由、具体例、対比などを区別する。" },
   { id: "connection.logic_quality", lab: "connection", label: "つながりを確かめる", description: "根拠や論理の十分さを考える。" },
   { id: "passage.order_topic", lab: "passage", label: "文のまとまり", description: "話題と自然な順序を捉える。" },

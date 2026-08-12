@@ -79,6 +79,14 @@ test("特訓モードは選んだSKILLなら学年より上の問題も使える
   assert.ok(questions.some((question) => question.skill === "words.abstract_objective" && question.contentLevel > 1));
 });
 
+test("接続詞を独立したスキルとして十分に特訓できる", () => {
+  const questions = QUESTIONS.filter((question) => question.skill === "connection.connectives");
+  assert.ok(questions.length >= 12);
+  assert.deepEqual([...new Set(questions.map((question) => question.contentLevel))].sort(), [1, 2, 3, 4, 5, 6]);
+  const tags = new Set(questions.flatMap((question) => question.thinkingTags));
+  ["因果", "逆接", "対比", "具体例"].forEach((tag) => assert.ok(tags.has(tag), tag));
+});
+
 test("追加問題は4LAB・6レベルに各5問ずつある", () => {
   const added = QUESTIONS.filter((question) => question.id.startsWith("kb2-"));
   assert.equal(added.length, 120);
