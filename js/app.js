@@ -1,6 +1,6 @@
 import { LABS, SKILL_MAP, DEPTH_LABELS, LEVEL_WORLDS, getSkill } from "./data/skill-map.js";
 import { QUESTIONS, DIAGNOSTIC_IDS, getQuestion } from "./data/questions.js";
-import { buildFocusSession, buildProgress, buildSession, findDelayedRetry, labReadiness } from "./core/engine.js";
+import { buildDiagnosticSession, buildFocusSession, buildProgress, buildSession, findDelayedRetry, labReadiness, orderQuestionOptions } from "./core/engine.js";
 import { loadAttempts, loadProfile, resetLearningData, saveAttempts, saveProfile } from "./core/storage.js";
 
 const app = document.querySelector("#app");
@@ -37,6 +37,24 @@ const state = {
 
 const labKeys = Object.keys(LABS);
 const progress = () => buildProgress(state.attempts);
+
+const hiraganaReplacements = [
+  ["客観的", "じじつにもとづいて"], ["具体例", "ぐたいてきな れい"], ["運動場", "うんどうじょう"],
+  ["図書室", "としょしつ"], ["主語", "しゅご"], ["述語", "じゅつご"], ["観察", "かんさつ"],
+  ["調査", "ちょうさ"], ["提案", "ていあん"], ["説明", "せつめい"], ["文章", "ぶんしょう"],
+  ["原因", "げんいん"], ["結果", "けっか"], ["理由", "りゆう"], ["順番", "じゅんばん"],
+  ["範囲", "はんい"], ["関係", "かんけい"], ["目的", "もくてき"], ["相手", "あいて"],
+  ["学習", "がくしゅう"], ["学校", "がっこう"], ["言葉", "ことば"], ["気持ち", "きもち"],
+  ["一番", "いちばん"], ["考え", "かんがえ"], ["伝わ", "つたわ"], ["詳しく", "くわしく"],
+  ["例えば", "たとえば"], ["最も", "もっとも"], ["選ぶ", "えらぶ"], ["選ん", "えらん"],
+  ["選び", "えらび"], ["読書", "どくしょ"], ["読む", "よむ"], ["読ん", "よん"],
+  ["書く", "かく"], ["書い", "かい"],
+];
+
+function displayText(value) {
+  if (state.profile.furigana !== "more" || !value) return value || "";
+  return hiraganaReplacements.reduce((text, [word, reading]) => text.replaceAll(word, reading), String(value));
+}
 
 function header() {
   return `<header class="site-header">
@@ -105,7 +123,7 @@ function startQueue(items, screen, sessionKind = "adaptive") {
 }
 
 function startDiagnostic() {
-  const items = DIAGNOSTIC_IDS.map(getQuestion).filter((q) => q && q.gradeMin <= state.profile.challengeLevel).map((q) => ({ questionId:q.id, role:"diagnostic" }));
+  const items = buildDiagnosticSession(QUESTIONS, DIAGNOSTIC_IDS, state.profile);
   startQueue(items, "diagnosis", "diagnostic");
 }
 
@@ -114,17 +132,18 @@ function questionTemplate() {
   const q = getQuestion(item?.questionId);
   if (!q) return `<main class="center-page"><section class="result-card"><h1>問題を準備できませんでした</h1><button class="primary-button" data-action="home">ホームへ</button></section></main>`;
   const lab = LABS[q.lab];
+  const options = orderQuestionOptions(q);
   const selected = q.options.find((option) => option.id === state.selectedId);
   const feedback = state.quality ? qualityCopy[state.quality] : null;
   const canRetry = state.quality !== "best" && state.tryNumber < 2;
   return `<main class="research-page"><section class="research-topline"><div><span class="lab-token ${lab.color}">${lab.icon}</span><div><small>${lab.label}</small><strong>${roleLabel[item.role]}</strong></div></div><p><b>${state.position + 1}</b> / ${state.queue.length}</p></section><div class="research-progress"><i style="width:${((state.position + 1) / state.queue.length) * 100}%"></i></div>
-    <section class="question-card"><div class="question-meta"><span>きょうのポイント</span><b>${q.subskill}</b><small>チャレンジ：${DEPTH_LABELS[q.depth]}</small></div>
-    ${(q.audience || q.goal) ? `<div class="situation-strip">${q.audience ? `<span><b>だれに？</b>${q.audience}</span>` : ""}${q.goal ? `<span><b>何のため？</b>${q.goal}</span>` : ""}</div>` : ""}
-    ${q.context ? `<p class="question-context">${q.context}</p>` : ""}<h1>${q.prompt}</h1><div class="option-grid">${q.options.map((option, index) => { const chosen = state.selectedId === option.id; return `<button data-option="${option.id}" class="${chosen ? `selected ${state.quality}` : ""}" ${(state.quality === "best" || (state.quality && !canRetry)) ? "disabled" : ""}><span>${String.fromCharCode(65 + index)}</span><strong>${option.text}</strong>${chosen && state.quality ? `<b>${qualityCopy[state.quality].mark}</b>` : ""}</button>`; }).join("")}</div>
+    <section class="question-card"><div class="question-meta"><span>きょうのポイント</span><b>${displayText(q.subskill)}</b><small>チャレンジ：${DEPTH_LABELS[q.depth]}${state.profile.furigana === "more" ? " ／ 🔤 ひらがな多め" : ""}</small></div>
+    ${(q.audience || q.goal) ? `<div class="situation-strip">${q.audience ? `<span><b>だれに？</b>${displayText(q.audience)}</span>` : ""}${q.goal ? `<span><b>何のため？</b>${displayText(q.goal)}</span>` : ""}</div>` : ""}
+    ${q.context ? `<p class="question-context">${displayText(q.context)}</p>` : ""}<h1>${displayText(q.prompt)}</h1><div class="option-grid">${options.map((option, index) => { const chosen = state.selectedId === option.id; return `<button data-option="${option.id}" class="${chosen ? `selected ${state.quality}` : ""}" ${(state.quality === "best" || (state.quality && !canRetry)) ? "disabled" : ""}><span>${String.fromCharCode(65 + index)}</span><strong>${displayText(option.text)}</strong>${chosen && state.quality ? `<b>${qualityCopy[state.quality].mark}</b>` : ""}</button>`; }).join("")}</div>
     ${!state.quality ? `<button class="hint-button" data-action="hint" ${state.usedHint ? "disabled" : ""}>💡 ${state.usedHint ? "ヒントを表示中" : "ヒントを見る"}</button>` : ""}
-    ${state.showHint && !state.quality ? `<div class="hint-box"><b>ちょこっとヒント</b><p>${q.hint}</p></div>` : ""}
-    ${feedback ? `<div class="feedback-box ${feedback.className}" role="status"><span>${feedback.mark}</span><div><h2>${feedback.title}</h2>${selected?.feedback ? `<p>${selected.feedback}</p>` : ""}</div></div><div class="answer-actions">${canRetry ? `<button class="secondary-button" data-action="retry">もう一度えらぶ</button>` : ""}${(state.quality === "best" || !canRetry || state.quality === "acceptable") ? `<button class="primary-button" data-action="next">${state.position === state.queue.length - 1 ? (state.screen === "diagnosis" ? "できたことを見る" : "ゴールへ！") : "つぎの問題へ"} <span>→</span></button>` : ""}<button class="why-button" data-action="why">💡 どうして？を見てみる</button></div>` : ""}
-    ${state.showWhy && state.quality ? `<div class="why-panel"><h3>なるほど！</h3><p>${q.explanation}</p>${q.visual ? `<div class="relation-visual"><span>${q.visual[0]}</span><b>${q.visual[1]}<i>→</i></b><span>${q.visual[2]}</span></div>` : ""}</div>` : ""}</section></main>`;
+    ${state.showHint && !state.quality ? `<div class="hint-box"><b>ちょこっとヒント</b><p>${displayText(q.hint)}</p></div>` : ""}
+    ${feedback ? `<div class="feedback-box ${feedback.className}" role="status"><span>${feedback.mark}</span><div><h2>${feedback.title}</h2>${selected?.feedback ? `<p>${displayText(selected.feedback)}</p>` : ""}</div></div><div class="answer-actions">${canRetry ? `<button class="secondary-button" data-action="retry">もう一度えらぶ</button>` : ""}${(state.quality === "best" || !canRetry || state.quality === "acceptable") ? `<button class="primary-button" data-action="next">${state.position === state.queue.length - 1 ? (state.screen === "diagnosis" ? "できたことを見る" : "ゴールへ！") : "つぎの問題へ"} <span>→</span></button>` : ""}<button class="why-button" data-action="why">💡 どうして？を見てみる</button></div>` : ""}
+    ${state.showWhy && state.quality ? `<div class="why-panel"><h3>なるほど！</h3><p>${displayText(q.explanation)}</p>${q.visual ? `<div class="relation-visual"><span>${displayText(q.visual[0])}</span><b>${displayText(q.visual[1])}<i>→</i></b><span>${displayText(q.visual[2])}</span></div>` : ""}</div>` : ""}</section></main>`;
 }
 
 function recordAnswer(q, quality) {
