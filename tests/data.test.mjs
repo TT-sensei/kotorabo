@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { QUESTIONS, DIAGNOSTIC_IDS } from "../js/data/questions.js";
 import { LABS, SKILL_MAP } from "../js/data/skill-map.js";
-import { buildFocusSession, buildSession } from "../js/core/engine.js";
+import { buildDiagnosticSession, buildFocusSession, buildSession, orderQuestionOptions } from "../js/core/engine.js";
 
 test("問題IDが重複せず、必要なメタデータがそろっている", () => {
   assert.equal(new Set(QUESTIONS.map((q) => q.id)).size, QUESTIONS.length);
@@ -21,6 +21,28 @@ test("問題IDが重複せず、必要なメタデータがそろっている", 
 test("初回診断が4LABをすべて含む", () => {
   const labs = new Set(DIAGNOSTIC_IDS.map((id) => QUESTIONS.find((q) => q.id === id)?.lab));
   assert.deepEqual([...labs].sort(), Object.keys(LABS).sort());
+});
+
+test("初回診断は全レベルで4LABから1問ずつ出す", () => {
+  for (let level = 1; level <= 6; level += 1) {
+    const session = buildDiagnosticSession(QUESTIONS, DIAGNOSTIC_IDS, { grade:level, challengeLevel:level });
+    const questions = session.map((item) => QUESTIONS.find((question) => question.id === item.questionId));
+    assert.equal(session.length, 4, `level ${level}`);
+    assert.deepEqual([...new Set(questions.map((question) => question.lab))].sort(), Object.keys(LABS).sort());
+    assert.ok(questions.every((question) => question.gradeMin <= level));
+  }
+});
+
+test("画面上のbest位置が問題IDによる安定順でA〜Dに分散する", () => {
+  const counts = [0, 0, 0, 0];
+  QUESTIONS.forEach((question) => {
+    const first = orderQuestionOptions(question).map((option) => option.id);
+    const second = orderQuestionOptions(question).map((option) => option.id);
+    assert.deepEqual(first, second, `${question.id}: stable`);
+    const bestIndex = orderQuestionOptions(question).findIndex((option) => option.quality === "best");
+    counts[bestIndex] += 1;
+  });
+  counts.forEach((count, index) => assert.ok(count >= 25, `choice ${index}: ${count}`));
 });
 
 test("各学年で今日の研究3問・5問・10問を重複なく生成できる", () => {
