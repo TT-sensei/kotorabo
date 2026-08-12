@@ -38,8 +38,17 @@ const state = {
 const labKeys = Object.keys(LABS);
 const progress = () => buildProgress(state.attempts);
 
+const connectiveGroups = [
+  { mark:"→", label:"順接", words:"だから・そのため・そこで", note:"前が理由、後ろが結果" },
+  { mark:"↩", label:"逆接", words:"しかし・けれども・ところが", note:"予想と反対へ進む" },
+  { mark:"＋", label:"添加・順序", words:"そして・また・さらに・次に", note:"情報や出来事を足す" },
+  { mark:"⇄", label:"対比", words:"一方・それに対して", note:"二つを並べて比べる" },
+  { mark:"🔍", label:"例示", words:"例えば・実際に", note:"具体的な例を出す" },
+  { mark:"＝", label:"言い換え・まとめ", words:"つまり・このように・以上から", note:"短くまとめ直す" },
+];
+
 const hiraganaReplacements = [
-  ["客観的", "じじつにもとづいて"], ["具体例", "ぐたいてきな れい"], ["運動場", "うんどうじょう"],
+  ["客観的", "じじつにもとづいて"], ["具体例", "ぐたいてきな れい"], ["接続詞", "せつぞくし"], ["運動場", "うんどうじょう"],
   ["図書室", "としょしつ"], ["主語", "しゅご"], ["述語", "じゅつご"], ["観察", "かんさつ"],
   ["調査", "ちょうさ"], ["提案", "ていあん"], ["説明", "せつめい"], ["文章", "ぶんしょう"],
   ["原因", "げんいん"], ["結果", "けっか"], ["理由", "りゆう"], ["順番", "じゅんばん"],
@@ -95,7 +104,7 @@ function homeTemplate() {
       <button data-size="5" class="recommended"><em>おすすめ</em><span class="session-icon scope">🔬</span><div><small>いいとこどり</small><strong>5問</strong><p>おさらい＋ちょいむず</p></div><b>→</b></button>
       <button data-size="10"><span class="session-icon flame">🔥</span><div><small>ぐんぐん</small><strong>10問</strong><p>ことばパワーをたっぷりためよう</p></div><b>→</b></button>
     </div></section>
-    <section class="quick-actions" aria-label="えらべるチャレンジ"><button class="quick-action-card focus-action" data-action="focus"><span>🎯</span><div><small>ここだけやりたい！</small><strong>特訓する</strong><p>気になる力をえらんで、ぐっとのばそう。</p></div><b>→</b></button><button class="quick-action-card settings-action" data-action="settings"><span>⚙️</span><div><small>むずかしさを変える</small><strong>レベルをえらぶ</strong><p>むずかしい・かんたんに合わせていつでも変更。</p></div><b>→</b></button></section>
+    <section class="quick-actions" aria-label="えらべるチャレンジ"><button class="quick-action-card connective-action" data-action="connectives"><span>→</span><div><small>だから？ しかし？</small><strong>接続詞を学ぶ</strong><p>つなぎ方を見て、使い分けを特訓しよう。</p></div><b>→</b></button><button class="quick-action-card focus-action" data-action="focus"><span>🎯</span><div><small>ここだけやりたい！</small><strong>特訓する</strong><p>気になる力をえらんで、ぐっとのばそう。</p></div><b>→</b></button><button class="quick-action-card settings-action" data-action="settings"><span>⚙️</span><div><small>むずかしさを変える</small><strong>レベルをえらぶ</strong><p>むずかしい・かんたんに合わせていつでも変更。</p></div><b>→</b></button></section>
     <section class="lab-overview"><div class="section-heading"><div><p>4つのラボをのぞいてみよう</p><h2>できることが、どんどんふえる！</h2></div><button class="text-button" data-action="carte">✨ できたことを見る →</button></div><div class="lab-grid">${labKeys.map((lab) => { const info = labReadiness(p, lab); return `<article class="lab-card ${LABS[lab].color}"><div><span>${LABS[lab].icon}</span><small>${info.label}</small></div><h3>${LABS[lab].label}</h3><p>${LABS[lab].question}</p><i><b style="width:${Math.max(4, info.value)}%"></b></i></article>`; }).join("")}</div><p class="history-note">👏 これまでに ${state.attempts.length}回、ことばをじっくり考えたよ！</p></section></main>`;
 }
 
@@ -113,6 +122,7 @@ function focusTemplate() {
   const selected = getSkill(state.focusSkill);
   return `<main class="focus-page"><section class="page-intro focus-intro"><p class="eyebrow">🎯 ここだけぐんぐん！</p><h1>特訓する</h1><p>気になる力をひとつえらぼう。今までの答え方を見ながら、やさしい問題も、ちょいむず問題もまぜて出すよ。</p><div class="focus-level-chip">いまの目安：チャレンジ Lv.${state.profile.challengeLevel}</div></section>
     <section class="focus-panel"><div class="focus-step"><span>1</span><div><h2>どのラボにする？</h2><p>まずは4つからえらぼう。</p></div></div><div class="focus-labs">${labKeys.map((lab) => `<button data-focus-lab="${lab}" class="${LABS[lab].color} ${state.focusLab === lab ? "selected" : ""}"><b>${LABS[lab].icon}</b><span>${LABS[lab].short}</span></button>`).join("")}</div></section>
+    ${state.focusLab === "connection" ? `<section class="connective-guide"><div class="connective-guide-heading"><span>→</span><div><small>まず見てみよう</small><h2>接続詞（つなぎ言葉）の地図</h2><p>前の文と後ろの文が、どんな関係かを考えると選びやすいよ。</p></div></div><div class="connective-map">${connectiveGroups.map((group) => `<article><b>${group.mark}</b><div><strong>${group.label}</strong><span>${group.words}</span><small>${group.note}</small></div></article>`).join("")}</div><p class="connective-tip">💡 接続詞だけを見るのではなく、「前の文 → 後ろの文」の向きを考えよう。</p></section>` : ""}
     <section class="focus-panel"><div class="focus-step"><span>2</span><div><h2>何を特訓する？</h2><p>「もう一回」がついている力は、今ちょうど伸びどき！</p></div></div><div class="skill-choice-grid">${skills.map((skill) => { const item = skillProgress.get(skill.id); const status = item?.needsReview ? "もう一回！" : item?.attempts ? `いま ${DEPTH_LABELS[Math.max(1,item.stableDepth)]}` : "はじめて"; return `<button data-focus-skill="${skill.id}" class="skill-choice ${state.focusSkill === skill.id ? "selected" : ""}"><span>${status}</span><strong>${skill.label}</strong><p>${skill.description}</p><b>${state.focusSkill === skill.id ? "✓" : "→"}</b></button>`; }).join("")}</div></section>
     <section class="focus-panel"><div class="focus-step"><span>3</span><div><h2>何問やってみる？</h2><p>その日の気分でえらんでOK！</p></div></div><div class="focus-size-grid">${[3,5].map((size) => `<button data-focus-size="${size}" class="${state.focusSize === size ? "selected" : ""}"><strong>${size}問</strong><span>${size === 3 ? "サクッと" : "おすすめ"}</span></button>`).join("")}</div><div class="focus-start"><div><small>${selected ? `${LABS[selected.lab].short}ラボ` : "力をひとつえらんでね"}</small><strong>${selected?.label || "まだえらんでいません"}</strong></div><button class="primary-button" data-action="start-focus" ${selected ? "" : "disabled"}>特訓スタート！ <span>→</span></button></div><p class="focus-note">選んだ力を中心に、同じラボの近い問題も組み合わせるよ。学年より下や上の問題が入ることもあるよ。</p></section></main>`;
 }
@@ -216,6 +226,7 @@ app.addEventListener("click", (event) => {
   if (action === "carte") { state.screen = "carte"; return render(); }
   if (action === "settings") { state.screen = "settings"; return render(); }
   if (action === "focus") { state.screen = "focus"; return render(); }
+  if (action === "connectives") { state.focusLab = "connection"; state.focusSkill = "connection.connectives"; state.screen = "focus"; return render(); }
   if (action === "start-focus" && state.focusSkill) return startQueue(buildFocusSession(QUESTIONS, state.profile, state.attempts, state.focusSkill, state.focusSize), "research", "focus");
   if (action === "hint") { state.usedHint = true; state.showHint = true; return render(); }
   if (action === "why") { state.showWhy = !state.showWhy; return render(); }
