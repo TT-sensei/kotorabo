@@ -2,6 +2,7 @@ import { WORD_QUESTION_DATA } from "./question-sets/words.js";
 import { SENTENCE_QUESTION_DATA } from "./question-sets/sentence.js";
 import { CONNECTION_QUESTION_DATA } from "./question-sets/connection.js";
 import { PASSAGE_QUESTION_DATA } from "./question-sets/passage.js";
+import { CONNECTIVE_EXTRA_DATA } from "./question-sets/connectives-extra.js";
 
 // 既存問題はこのファイル、新しい120問は question-sets/ のLAB別ファイルで編集します。
 // idは変えず、内容や判定基準を直したらversionを1つ上げます。
@@ -49,6 +50,7 @@ export const QUESTIONS = [
   ...WORD_QUESTION_DATA.map(([id, data]) => make(id, data)),
   ...SENTENCE_QUESTION_DATA.map(([id, data]) => make(id, data)),
   ...CONNECTION_QUESTION_DATA.map(([id, data]) => make(id, data)),
+  ...CONNECTIVE_EXTRA_DATA.map(([id, data]) => make(id, data)),
   ...PASSAGE_QUESTION_DATA.map(([id, data]) => make(id, data)),
 ];
 
