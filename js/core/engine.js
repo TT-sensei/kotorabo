@@ -11,6 +11,22 @@ function hash(input) {
 
 const stableSort = (items, seed) => [...items].sort((a, b) => hash(`${seed}:${a.id}`) - hash(`${seed}:${b.id}`));
 
+export const orderQuestionOptions = (question) => stableSort(question.options, `${question.id}:option`);
+
+export function buildDiagnosticSession(bank, diagnosticIds, profile) {
+  const targetLevel = profile.challengeLevel ?? profile.grade;
+  const diagnosticSet = new Set(diagnosticIds);
+  const available = bank.filter((question) => diagnosticSet.has(question.id) && question.gradeMin <= targetLevel);
+
+  return [...new Set(SKILL_MAP.map((skill) => skill.lab))].map((lab) => {
+    const candidates = stableSort(
+      available.filter((question) => question.lab === lab),
+      `diagnostic:${targetLevel}:${lab}`,
+    ).sort((a, b) => b.contentLevel - a.contentLevel);
+    return candidates[0] ? { questionId: candidates[0].id, role: "diagnostic" } : null;
+  }).filter(Boolean);
+}
+
 export function buildProgress(attempts) {
   return SKILL_MAP.map((definition) => {
     const records = attempts.filter((item) => item.skill === definition.id);
@@ -55,8 +71,10 @@ export function buildSession(bank, profile, attempts, size) {
     let pool = stableSort(available.filter((q) => !used.has(q.id) && !recentIds.has(q.id) && test(q)), `${seed}:${role}`);
     if (!pool.length) pool = stableSort(available.filter((q) => !used.has(q.id) && test(q)), `${seed}:${role}:fallback`);
     if (!pool.length) return false;
-    used.add(pool[0].id);
-    result.push({ questionId: pool[0].id, role });
+    const recentThemes = new Set(result.slice(-2).map((item) => bank.find((q) => q.id === item.questionId)?.theme).filter(Boolean));
+    const chosen = pool.find((question) => !question.theme || !recentThemes.has(question.theme)) || pool[0];
+    used.add(chosen.id);
+    result.push({ questionId: chosen.id, role });
     return true;
   }
 
@@ -117,5 +135,16 @@ export function buildFocusSession(bank, profile, attempts, skillId, size = 5) {
 }
 
 export function findDelayedRetry(bank, current, usedIds, level) {
-  return bank.find((q) => q.id !== current.id && !usedIds.has(q.id) && q.skill === current.skill && q.gradeMin <= level && (q.similarGroup !== current.similarGroup || q.transferGroup === current.transferGroup));
+  const currentTags = new Set([...(current.thinkingTags || []), ...(current.crossTags || [])]);
+  const candidates = bank.filter((q) => q.id !== current.id && !usedIds.has(q.id) && q.skill === current.skill && q.gradeMin <= level && (q.similarGroup !== current.similarGroup || q.transferGroup === current.transferGroup));
+  return candidates.sort((a, b) => {
+    const score = (question) => {
+      const tags = [...(question.thinkingTags || []), ...(question.crossTags || [])];
+      const tagOverlap = tags.filter((tag) => currentTags.has(tag)).length;
+      const differentTheme = question.theme && question.theme !== current.theme ? 3 : 0;
+      const sameTransfer = question.transferGroup && question.transferGroup === current.transferGroup ? 2 : 0;
+      return tagOverlap + differentTheme + sameTransfer;
+    };
+    return score(b) - score(a);
+  })[0];
 }
