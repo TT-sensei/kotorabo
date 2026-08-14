@@ -135,7 +135,7 @@ function focusTemplate() {
 }
 
 function startQueue(items, screen, sessionKind = "adaptive") {
-  Object.assign(state, { queue:items, screen, sessionKind, position:0, selectedId:null, quality:null, tryNumber:1, usedHint:false, showHint:false, showWhy:false, sessionAttempts:[], sessionComplete:false });
+  Object.assign(state, { queue:items, screen, sessionKind, position:0, selectedId:null, quality:null, tryNumber:1, usedHint:false, showHint:false, showWhy:false, sessionAttempts:[], sessionComplete:false, lastXpAward:0, lastRankUp:null });
   render();
 }
 
