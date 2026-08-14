@@ -2,6 +2,7 @@ import { LABS, SKILL_MAP, DEPTH_LABELS, LEVEL_WORLDS, getSkill } from "./data/sk
 import { QUESTIONS, DIAGNOSTIC_IDS, getQuestion } from "./data/questions.js";
 import { buildDiagnosticSession, buildFocusSession, buildProgress, buildSession, findDelayedRetry, labReadiness, orderQuestionOptions } from "./core/engine.js";
 import { loadAttempts, loadProfile, resetLearningData, saveAttempts, saveProfile } from "./core/storage.js";
+import { awardResearchXP, getResearchStatus } from "./core/research-xp.js";
 
 const app = document.querySelector("#app");
 const roleLabel = {
@@ -21,8 +22,8 @@ const qualityCopy = {
 
 const savedProfile = loadProfile();
 const initialProfile = savedProfile
-  ? { ...savedProfile, challengeLevel:savedProfile.challengeLevel ?? savedProfile.grade ?? 3 }
-  : { grade:3, challengeLevel:3, furigana:"grade", onboarded:false, createdAt:new Date().toISOString() };
+  ? { ...savedProfile, challengeLevel:savedProfile.challengeLevel ?? savedProfile.grade ?? 3, researchXP:savedProfile.researchXP ?? 0 }
+  : { grade:3, challengeLevel:3, furigana:"grade", onboarded:false, researchXP:0, createdAt:new Date().toISOString() };
 
 const state = {
   profile: initialProfile,
@@ -33,6 +34,7 @@ const state = {
   usedHint:false, showHint:false, showWhy:false, sessionAttempts:[], sessionComplete:false,
   sessionKind:"adaptive", focusLab:"words", focusSkill:null, focusSize:5,
   resetConfirm:false,
+  lastXpAward:0, lastRankUp:null,
 };
 
 const labKeys = Object.keys(LABS);
@@ -65,10 +67,15 @@ function displayText(value) {
   return hiraganaReplacements.reduce((text, [word, reading]) => text.replaceAll(word, reading), String(value));
 }
 
+function researchStatusTemplate(compact = false) {
+  const status = getResearchStatus(state.profile.researchXP);
+  return `<div class="research-status ${compact ? "compact" : ""}" aria-label="研究者レベル ${status.level}、研究XP ${status.xp}"><span class="research-badge">🔬</span><div><small>${status.title}・Lv.${status.level}</small><strong>${status.xp} XP</strong><i><b style="width:${status.progress}%"></b></i></div></div>`;
+}
+
 function header() {
   return `<header class="site-header">
     <button class="brand" data-action="home" aria-label="ホームへ戻る"><span class="brand-mark small">こ</span><span><strong>ことラボ</strong><small>ことばをためして、伝える力をのばそう！</small></span></button>
-    <nav aria-label="メインメニュー"><button data-action="home" class="${state.screen === "home" ? "active" : ""}">今日のチャレンジ</button><button data-action="focus" class="${state.screen === "focus" ? "active" : ""}">特訓する</button><button data-action="carte" class="${state.screen === "carte" ? "active" : ""}">できたこと</button><button data-action="settings" class="${state.screen === "settings" ? "active" : ""}">せってい</button><span class="grade-chip">${state.profile.grade}年生・レベル${state.profile.challengeLevel}</span></nav>
+    <nav aria-label="メインメニュー"><button data-action="home" class="${state.screen === "home" ? "active" : ""}">今日のチャレンジ</button><button data-action="focus" class="${state.screen === "focus" ? "active" : ""}">特訓する</button><button data-action="carte" class="${state.screen === "carte" ? "active" : ""}">できたこと</button><button data-action="settings" class="${state.screen === "settings" ? "active" : ""}">せってい</button>${researchStatusTemplate(true)}<span class="grade-chip">${state.profile.grade}年生・問題Lv.${state.profile.challengeLevel}</span></nav>
   </header>`;
 }
 
@@ -98,7 +105,7 @@ function renderOnboarding() {
 function homeTemplate() {
   const p = progress();
   const reviewCount = p.filter((item) => item.needsReview).length;
-  return `<main class="home-page"><section class="research-hero"><div><p class="eyebrow light"><i></i> きょうのきみにぴったり</p><h1>今日のチャレンジ</h1><p>${reviewCount ? "前に迷った問題も、ちがうお話でもう一度チャレンジ！" : "4つのラボをめぐって、ことばパワーをのばそう！"}</p></div><div class="flask-art" aria-hidden="true"><span>あ</span><span>文</span><span>→</span></div></section>
+  return `<main class="home-page"><section class="research-hero"><div><p class="eyebrow light"><i></i> きょうのきみにぴったり</p><h1>今日のチャレンジ</h1><p>${reviewCount ? "前に迷った問題も、ちがうお話でもう一度チャレンジ！" : "4つのラボをめぐって、ことばパワーをのばそう！"}</p></div><div class="hero-research-status">${researchStatusTemplate()}</div><div class="flask-art" aria-hidden="true"><span>あ</span><span>文</span><span>→</span></div></section>
     <section class="session-picker"><div class="section-heading"><div><p>コースをえらぼう</p><h2>どれにチャレンジする？</h2></div><span>途中で休んでもだいじょうぶ</span></div><div class="session-grid">
       <button data-size="3"><span class="session-icon bolt">⚡</span><div><small>サクッと</small><strong>3問</strong><p>まずは気軽にやってみよう</p></div><b>→</b></button>
       <button data-size="5" class="recommended"><em>おすすめ</em><span class="session-icon scope">🔬</span><div><small>いいとこどり</small><strong>5問</strong><p>おさらい＋ちょいむず</p></div><b>→</b></button>
@@ -128,7 +135,7 @@ function focusTemplate() {
 }
 
 function startQueue(items, screen, sessionKind = "adaptive") {
-  Object.assign(state, { queue:items, screen, sessionKind, position:0, selectedId:null, quality:null, tryNumber:1, usedHint:false, showHint:false, showWhy:false, sessionAttempts:[], sessionComplete:false });
+  Object.assign(state, { queue:items, screen, sessionKind, position:0, selectedId:null, quality:null, tryNumber:1, usedHint:false, showHint:false, showWhy:false, sessionAttempts:[], sessionComplete:false, lastXpAward:0, lastRankUp:null });
   render();
 }
 
@@ -152,13 +159,19 @@ function questionTemplate() {
     ${q.context ? `<p class="question-context">${displayText(q.context)}</p>` : ""}<h1>${displayText(q.prompt)}</h1><div class="option-grid">${options.map((option, index) => { const chosen = state.selectedId === option.id; return `<button data-option="${option.id}" class="${chosen ? `selected ${state.quality}` : ""}" ${(state.quality === "best" || (state.quality && !canRetry)) ? "disabled" : ""}><span>${String.fromCharCode(65 + index)}</span><strong>${displayText(option.text)}</strong>${chosen && state.quality ? `<b>${qualityCopy[state.quality].mark}</b>` : ""}</button>`; }).join("")}</div>
     ${!state.quality ? `<button class="hint-button" data-action="hint" ${state.usedHint ? "disabled" : ""}>💡 ${state.usedHint ? "ヒントを表示中" : "ヒントを見る"}</button>` : ""}
     ${state.showHint && !state.quality ? `<div class="hint-box"><b>ちょこっとヒント</b><p>${displayText(q.hint)}</p></div>` : ""}
-    ${feedback ? `<div class="feedback-box ${feedback.className}" role="status"><span>${feedback.mark}</span><div><h2>${feedback.title}</h2>${selected?.feedback ? `<p>${displayText(selected.feedback)}</p>` : ""}</div></div><div class="answer-actions">${canRetry ? `<button class="secondary-button" data-action="retry">もう一度えらぶ</button>` : ""}${(state.quality === "best" || !canRetry || state.quality === "acceptable") ? `<button class="primary-button" data-action="next">${state.position === state.queue.length - 1 ? (state.screen === "diagnosis" ? "できたことを見る" : "ゴールへ！") : "つぎの問題へ"} <span>→</span></button>` : ""}<button class="why-button" data-action="why">💡 どうして？を見てみる</button></div>` : ""}
+    ${feedback ? `<div class="feedback-box ${feedback.className}" role="status"><span>${feedback.mark}</span><div><h2>${feedback.title}</h2>${selected?.feedback ? `<p>${displayText(selected.feedback)}</p>` : ""}${state.lastXpAward ? `<p class="xp-earned">🔬 研究XP +${state.lastXpAward}</p>` : ""}${state.lastRankUp ? `<p class="rank-up-message">🎉 研究者レベルアップ！ ${state.lastRankUp.title}になったよ！</p>` : ""}</div></div><div class="answer-actions">${canRetry ? `<button class="secondary-button" data-action="retry">もう一度えらぶ</button>` : ""}${(state.quality === "best" || !canRetry || state.quality === "acceptable") ? `<button class="primary-button" data-action="next">${state.position === state.queue.length - 1 ? (state.screen === "diagnosis" ? "できたことを見る" : "ゴールへ！") : "つぎの問題へ"} <span>→</span></button>` : ""}<button class="why-button" data-action="why">💡 どうして？を見てみる</button></div>` : ""}
     ${state.showWhy && state.quality ? `<div class="why-panel"><h3>なるほど！</h3><p>${displayText(q.explanation)}</p>${q.visual ? `<div class="relation-visual"><span>${displayText(q.visual[0])}</span><b>${displayText(q.visual[1])}<i>→</i></b><span>${displayText(q.visual[2])}</span></div>` : ""}</div>` : ""}</section></main>`;
 }
 
 function recordAnswer(q, quality) {
-  const event = { questionId:q.id, questionVersion:q.version, lab:q.lab, skill:q.skill, contentLevel:q.contentLevel, depth:q.depth, quality, tryNumber:state.tryNumber, usedHint:state.usedHint, mode:state.sessionKind, answeredAt:new Date().toISOString() };
-  state.attempts.push(event); state.sessionAttempts.push(event); saveAttempts(state.attempts);
+  const before = getResearchStatus(state.profile.researchXP);
+  const xpAward = awardResearchXP({ quality, usedHint:state.usedHint, tryNumber:state.tryNumber });
+  state.profile.researchXP = (Number(state.profile.researchXP) || 0) + xpAward;
+  const after = getResearchStatus(state.profile.researchXP);
+  state.lastXpAward = xpAward;
+  state.lastRankUp = after.level > before.level ? after : null;
+  const event = { questionId:q.id, questionVersion:q.version, lab:q.lab, skill:q.skill, contentLevel:q.contentLevel, depth:q.depth, quality, tryNumber:state.tryNumber, usedHint:state.usedHint, mode:state.sessionKind, xpAward, answeredAt:new Date().toISOString() };
+  state.attempts.push(event); state.sessionAttempts.push(event); saveAttempts(state.attempts); saveProfile(state.profile);
 }
 
 function chooseOption(id) {
@@ -183,7 +196,7 @@ function nextQuestion() {
     return render();
   }
   state.position += 1;
-  Object.assign(state, { selectedId:null, quality:null, tryNumber:1, usedHint:false, showHint:false, showWhy:false });
+  Object.assign(state, { selectedId:null, quality:null, tryNumber:1, usedHint:false, showHint:false, showWhy:false, lastXpAward:0, lastRankUp:null });
   render();
 }
 
@@ -194,7 +207,9 @@ function resultTemplate() {
   const recovered = records.filter((item) => item.quality === "best" && item.tryNumber > 1).length;
   const skills = [...new Set(records.filter((item) => item.quality !== "incorrect").map((item) => getSkill(item.skill)?.label).filter(Boolean))];
   const tryPrompt = state.queue.map((item) => getQuestion(item.questionId)?.tryIt).find(Boolean);
-  return `<main class="center-page result-page"><section class="result-card"><div class="discovery-burst">🎉</div><p class="eyebrow">${state.sessionKind === "focus" ? "特訓クリア！" : "チャレンジ クリア！"}</p><h1>ことばパワーがアップ！</h1><div class="result-numbers"><div><strong>${records.length}</strong><span>考えた問題</span></div><div><strong>${best}</strong><span>一番ぴったり</span></div><div><strong>${recovered}</strong><span>考え直してできた</span></div></div>${skills.length ? `<div class="discoveries"><h2>できるようになってきたよ</h2>${skills.slice(0,3).map((skill) => `<span>✦ ${skill}</span>`).join("")}</div>` : ""}${tryPrompt ? `<div class="try-it"><small>やってみよう！</small><p>${tryPrompt}</p><span>正解・不正解はないよ。声に出したり、短く書いたりしてみよう。</span></div>` : ""}<div class="button-row"><button class="secondary-button" data-action="again">もう一回！</button><button class="primary-button" data-action="home">ホームへ <span>→</span></button></div></section></main>`;
+  const sessionXP = state.sessionAttempts.reduce((sum, item) => sum + (item.xpAward || 0), 0);
+  const researcher = getResearchStatus(state.profile.researchXP);
+  return `<main class="center-page result-page"><section class="result-card"><div class="discovery-burst">🎉</div><p class="eyebrow">${state.sessionKind === "focus" ? "特訓クリア！" : "チャレンジ クリア！"}</p><h1>ことばパワーがアップ！</h1><div class="result-xp"><span>今回ためた研究XP</span><strong>+${sessionXP} XP</strong><small>いまは ${researcher.title}・Lv.${researcher.level}</small></div><div class="result-numbers"><div><strong>${records.length}</strong><span>考えた問題</span></div><div><strong>${best}</strong><span>一番ぴったり</span></div><div><strong>${recovered}</strong><span>考え直してできた</span></div></div>${skills.length ? `<div class="discoveries"><h2>できるようになってきたよ</h2>${skills.slice(0,3).map((skill) => `<span>✦ ${skill}</span>`).join("")}</div>` : ""}${tryPrompt ? `<div class="try-it"><small>やってみよう！</small><p>${tryPrompt}</p><span>正解・不正解はないよ。声に出したり、短く書いたりしてみよう。</span></div>` : ""}<div class="button-row"><button class="secondary-button" data-action="again">もう一回！</button><button class="primary-button" data-action="home">ホームへ <span>→</span></button></div></section></main>`;
 }
 
 function carteTemplate() {
@@ -205,7 +220,7 @@ function carteTemplate() {
     next: p.filter((item) => item.needsReview || item.stableDepth < 2),
   };
   const section = (title, icon, items, empty) => `<section class="carte-section"><h2><span>${icon}</span>${title}</h2>${items.length ? `<div class="skill-list">${items.map((item) => { const skill = getSkill(item.skill); return `<article><div><span class="${LABS[item.lab].color}">${LABS[item.lab].icon}</span><div><strong>${skill?.label}</strong><small>${item.stableDepth >= 5 ? "ちがうお話でもできたよ！" : `${DEPTH_LABELS[Math.max(1,item.stableDepth)]}にチャレンジ中`}</small></div></div><b>${item.needsReview ? "もう一回" : "のびてる！"}</b></article>`; }).join("")}</div>` : `<p class="empty-state">${empty}</p>`}</section>`;
-  return `<main class="carte-page"><section class="carte-hero"><div><p class="eyebrow">きみのがんばり</p><h1>できたこと</h1><p>ことばを考えた分だけ、できることがふえていくよ。</p></div><div class="carte-stamp"><strong>${state.attempts.length}</strong><span>考えた回数</span><small>小学${state.profile.grade}年</small></div></section><div class="carte-columns">${section("できるようになった！","✦",groups.strong,"チャレンジすると、ここにできたことが集まるよ！")} ${section("ぐんぐん成長中","↗",groups.growing,"これから、できることがふえていくよ。")} ${section("つぎにチャレンジ","◎",groups.next,"迷った問題は、またちがうお話で出てくるよ。")}</div><section class="teacher-note"><div><h2>ちゃんと見ているよ</h2><p>正解だけでなく、ヒントを見たことや、考え直してできたことも大切にしています。</p></div><button data-action="home">今日のチャレンジへ →</button></section><details class="data-settings"><summary>せってい</summary><p>この端末に、これまでのがんばりを保存しています。</p><button data-action="reset">${state.resetConfirm ? "本当に最初からやり直す" : "最初からやり直す"}</button></details></main>`;
+  return `<main class="carte-page"><section class="carte-hero"><div><p class="eyebrow">きみのがんばり</p><h1>できたこと</h1><p>ことばを考えた分だけ、できることがふえていくよ。</p></div><div class="carte-research">${researchStatusTemplate()}</div><div class="carte-stamp"><strong>${state.attempts.length}</strong><span>考えた回数</span><small>小学${state.profile.grade}年</small></div></section><div class="carte-columns">${section("できるようになった！","✦",groups.strong,"チャレンジすると、ここにできたことが集まるよ！")} ${section("ぐんぐん成長中","↗",groups.growing,"これから、できることがふえていくよ。")} ${section("つぎにチャレンジ","◎",groups.next,"迷った問題は、またちがうお話で出てくるよ。")}</div><section class="teacher-note"><div><h2>ちゃんと見ているよ</h2><p>正解だけでなく、ヒントを見たことや、考え直してできたことも大切にしています。</p></div><button data-action="home">今日のチャレンジへ →</button></section><details class="data-settings"><summary>せってい</summary><p>この端末に、これまでのがんばりを保存しています。</p><button data-action="reset">${state.resetConfirm ? "本当に最初からやり直す" : "最初からやり直す"}</button></details></main>`;
 }
 
 app.addEventListener("click", (event) => {
@@ -240,7 +255,7 @@ app.addEventListener("click", (event) => {
   }
   if (action === "reset") {
     if (!state.resetConfirm) { state.resetConfirm = true; return render(); }
-    resetLearningData(); Object.assign(state, { profile:{ grade:3, challengeLevel:3, furigana:"grade", onboarded:false, createdAt:new Date().toISOString() }, attempts:[], screen:"onboarding", onboardingResult:false, resetConfirm:false, focusLab:"words", focusSkill:null, focusSize:5 }); return render();
+    resetLearningData(); Object.assign(state, { profile:{ grade:3, challengeLevel:3, furigana:"grade", onboarded:false, researchXP:0, createdAt:new Date().toISOString() }, attempts:[], screen:"onboarding", onboardingResult:false, resetConfirm:false, focusLab:"words", focusSkill:null, focusSize:5 }); return render();
   }
 });
 
