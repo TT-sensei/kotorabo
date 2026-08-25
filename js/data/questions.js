@@ -3,6 +3,7 @@ import { SENTENCE_QUESTION_DATA } from "./question-sets/sentence.js";
 import { CONNECTION_QUESTION_DATA } from "./question-sets/connection.js";
 import { PASSAGE_QUESTION_DATA } from "./question-sets/passage.js";
 import { CONNECTIVE_EXTRA_DATA } from "./question-sets/connectives-extra.js";
+import { SYSTEMATIC_LANGUAGE_DATA } from "./question-sets/systematic-language.js";
 
 // 既存問題はこのファイル、新しい120問は question-sets/ のLAB別ファイルで編集します。
 // idは変えず、内容や判定基準を直したらversionを1つ上げます。
@@ -52,6 +53,7 @@ export const QUESTIONS = [
   ...CONNECTION_QUESTION_DATA.map(([id, data]) => make(id, data)),
   ...CONNECTIVE_EXTRA_DATA.map(([id, data]) => make(id, data)),
   ...PASSAGE_QUESTION_DATA.map(([id, data]) => make(id, data)),
+  ...SYSTEMATIC_LANGUAGE_DATA.map(([id, data]) => make(id, data)),
 ];
 
 export const DIAGNOSTIC_IDS = ["w-basic-feeling-001","w-see-range-001","s-core-subject-001","s-detail-order-001","c-sequence-001","c-reason-example-001","p-order-001","p-structure-001"];

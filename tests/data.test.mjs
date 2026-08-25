@@ -3,6 +3,8 @@ import assert from "node:assert/strict";
 import { QUESTIONS, DIAGNOSTIC_IDS } from "../js/data/questions.js";
 import { LABS, SKILL_MAP } from "../js/data/skill-map.js";
 import { buildDiagnosticSession, buildFocusSession, buildSession, orderQuestionOptions } from "../js/core/engine.js";
+import { SYSTEMATIC_VOCABULARY } from "../js/data/question-sets/systematic-language.js";
+import { BADGES, evaluateBadgeIds } from "../js/data/badges.js";
 
 test("問題IDが重複せず、必要なメタデータがそろっている", () => {
   assert.equal(new Set(QUESTIONS.map((q) => q.id)).size, QUESTIONS.length);
@@ -131,4 +133,44 @@ test("追加問題のbest位置がA〜Dに分散している", () => {
     });
   });
   counts.forEach((count, index) => assert.ok(count >= 20, `choice ${index}: ${count}`));
+});
+
+test("学年系統の独自問題を6SKILL・各12問収録している", () => {
+  const systematic = QUESTIONS.filter((question) => question.id.startsWith("sys-"));
+  assert.equal(systematic.length, 72);
+  const skills = [
+    "words.semantic_groups", "words.feeling_character", "words.traditional_expressions",
+    "words.word_formation", "words.learning_terms", "sentence.register_keigo",
+  ];
+  skills.forEach((skill) => assert.equal(systematic.filter((question) => question.skill === skill).length, 12, skill));
+  systematic.forEach((question) => {
+    assert.equal(question.options.length, 4, question.id);
+    assert.equal(question.options.filter((option) => option.quality === "best").length, 1, question.id);
+    assert.ok(question.curriculumTags?.length >= 2, `${question.id}: curriculumTags`);
+    assert.ok(question.vocabularyIds?.length, `${question.id}: vocabularyIds`);
+  });
+});
+
+test("ことばファイルは独自問題と1対1で参照できる", () => {
+  assert.equal(SYSTEMATIC_VOCABULARY.length, 72);
+  const ids = new Set(SYSTEMATIC_VOCABULARY.map((word) => word.id));
+  assert.equal(ids.size, 72);
+  SYSTEMATIC_VOCABULARY.forEach((word) => {
+    assert.ok(word.term && word.category && word.meaning && word.example, word.id);
+    word.questionIds.forEach((id) => assert.ok(QUESTIONS.some((question) => question.id === id), `${word.id}: ${id}`));
+  });
+});
+
+test("達成バッジは42個で、正解以外の学習行動も評価する", () => {
+  assert.equal(BADGES.length, 42);
+  assert.equal(new Set(BADGES.map((badge) => badge.id)).size, 42);
+  const sampleQuestion = QUESTIONS.find((question) => question.purpose === "transfer");
+  const attempts = [{
+    questionId:sampleQuestion.id, lab:sampleQuestion.lab, skill:sampleQuestion.skill,
+    depth:sampleQuestion.depth, quality:"best", tryNumber:2, usedHint:true,
+    mode:"focus", answeredAt:"2026-08-25T10:00:00.000Z",
+  }];
+  const ids = evaluateBadgeIds({ attempts, questions:QUESTIONS, researchLevel:2 });
+  ["process-first-step", "process-comeback", "process-hint", "process-review", "process-transfer", "rank-2"]
+    .forEach((id) => assert.ok(ids.includes(id), id));
 });
