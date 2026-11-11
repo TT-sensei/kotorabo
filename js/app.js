@@ -1,6 +1,6 @@
 import { LABS, SKILL_MAP, DEPTH_LABELS, LEVEL_WORLDS, getSkill } from "./data/skill-map.js";
-import { QUESTIONS, DIAGNOSTIC_IDS, VOCABULARY_DATA, getQuestion } from "./data/questions.js";
-import { buildDiagnosticSession, buildFocusSession, buildProgress, buildSession, findDelayedRetry, labReadiness, orderQuestionOptions } from "./core/engine.js";
+import { QUESTIONS, VOCABULARY_DATA, getQuestion } from "./data/questions.js";
+import { buildFocusSession, buildProgress, buildSession, findDelayedRetry, labReadiness, orderQuestionOptions } from "./core/engine.js";
 import { loadAttempts, loadBadges, loadProfile, resetLearningData, saveAttempts, saveBadges, saveProfile } from "./core/storage.js";
 import { awardResearchXP, getResearchStatus } from "./core/research-xp.js";
 import { BADGES, evaluateBadgeIds, getBadge } from "./data/badges.js";
@@ -93,7 +93,6 @@ function header() {
 }
 
 function render() {
-  if (state.screen === "onboarding") return renderOnboarding();
   app.innerHTML = header() + (
     state.screen === "home" ? homeTemplate() :
     state.screen === "carte" ? carteTemplate() :
@@ -106,16 +105,6 @@ function render() {
   window.scrollTo({ top:0, behavior:"smooth" });
 }
 
-function renderOnboarding() {
-  if (state.onboardingResult) {
-    app.innerHTML = `<main class="center-page"><section class="result-card diagnosis-result"><div class="discovery-burst">🎉</div><p class="eyebrow">はじめのチャレンジ クリア！</p><h1>いいスタート！</h1><p>きみの答え方が少し分かったよ。ぴったりの問題をえらんでいくね。</p><div class="diagnosis-grid">${labKeys.map((lab) => { const info = labReadiness(progress(), lab); return `<div class="diagnosis-item ${LABS[lab].color}"><span>${LABS[lab].icon}</span><div><strong>${LABS[lab].short}</strong><small>${info.label}</small></div></div>`; }).join("")}</div><button class="primary-button" data-action="finish-onboarding">今日のチャレンジへ <span>→</span></button></section></main>`;
-    return;
-  }
-  app.innerHTML = `<main class="onboarding-page">
-    <section class="onboarding-copy"><p class="eyebrow"><b>NEW</b> ことばの研究へようこそ！</p><h1><span>ことば</span>をためす。<br>「伝わる！」がふえる。</h1><p>言葉の意味を知り、似た言葉と比べ、場面に合う表現を選ぼう。まちがえても大丈夫。少しずつ使える言葉を増やそう。</p>${naviImage(NAVI.groupStudying, "ことばの学習を応援する仲間たち", "onboarding-navi")}<div class="lab-mini-row">${labKeys.map((id) => `<div class="lab-mini ${LABS[id].color}"><b>${LABS[id].icon}</b><span>${LABS[id].short}</span></div>`).join("")}</div></section>
-    <section class="setup-card"><p class="step-label">はじめに おしえてね</p><h2>きみにぴったりの問題をえらぶよ</h2><fieldset><legend>いま、何年生？</legend><div class="grade-grid">${[1,2,3,4,5,6].map((grade) => `<button data-grade="${grade}" class="${state.profile.grade === grade ? "selected" : ""}"><strong>${grade}</strong><span>年</span></button>`).join("")}</div></fieldset><fieldset><legend>文字の読みやすさ</legend><div class="choice-row"><button data-furigana="grade" class="${state.profile.furigana === "grade" ? "selected" : ""}">学年に合わせる</button><button data-furigana="more" class="${state.profile.furigana === "more" ? "selected" : ""}">ひらがな多め</button></div></fieldset><button class="primary-button full" data-action="diagnostic">はじめのチャレンジ！ <span>→</span></button><p class="safe-note">ここはテストじゃないよ。今できるところから始めよう！</p></section>
-  </main>`;
-}
 
 function homeTemplate() {
   const p = progress();
@@ -162,7 +151,7 @@ function focusTemplate() {
   const skillProgress = new Map(progress().map((item) => [item.skill, item]));
   const skills = SKILL_MAP.filter((skill) => skill.lab === state.focusLab);
   const selected = getSkill(state.focusSkill) || skills[0];
-  return `<main class="focus-page"><section class="page-intro focus-intro"><p class="eyebrow">🎯 言葉をじっくり身につけよう</p><h1>ジャンル別に特訓する</h1><p>覚えたい言葉のジャンルを選ぼう。意味を確かめたり、似た言葉と比べたりしながら、使える語彙を増やしていくよ。</p><div class="focus-level-chip">いまの目安：チャレンジ Lv.${state.profile.challengeLevel}</div></section>
+  return `<main class="focus-page"><section class="page-intro focus-intro"><p class="eyebrow">🎯 言葉をじっくり身につけよう</p><h1>ジャンル別に特訓する</h1><p>覚えたい言葉のジャンルを選ぼう。意味を確かめたり、似た言葉と比べたりしながら、使える語彙を増やしていくよ。</p><div class="focus-level-chip">問題のむずかしさは、答え方に合わせて自動で変わるよ。</div></section>
     <section class="focus-panel"><div class="focus-step"><span>1</span><div><h2>どのジャンルにする？</h2><p>今、伸ばしたいところを選ぼう。</p></div></div><div class="focus-labs">${labKeys.map((lab) => `<button data-focus-lab="${lab}" class="${LABS[lab].color} ${state.focusLab === lab ? "selected" : ""}"><b>${LABS[lab].icon}</b><span>${LABS[lab].short}</span></button>`).join("")}</div></section>
     <section class="focus-panel"><div class="focus-step"><span>2</span><div><h2>このジャンルで学ぼう</h2><p>このジャンルの問題を中心に出題するよ。</p></div></div><div class="skill-choice-grid">${skills.map((skill) => { const item = skillProgress.get(skill.id); const status = item?.needsReview ? "もう一回！" : item?.attempts ? `いま ${DEPTH_LABELS[Math.max(1,item.stableDepth)]}` : "はじめて"; return `<button data-focus-skill="${skill.id}" class="skill-choice ${state.focusSkill === skill.id ? "selected" : ""}"><span>${status}</span><strong>${skill.label}</strong><p>${skill.description}</p><b>${state.focusSkill === skill.id ? "✓" : "→"}</b></button>`; }).join("")}</div></section>
     <section class="focus-panel"><div class="focus-step"><span>3</span><div><h2>何問やってみる？</h2><p>その日の気分でえらんでOK！</p></div></div><div class="focus-size-grid">${[3,5].map((size) => `<button data-focus-size="${size}" class="${state.focusSize === size ? "selected" : ""}"><strong>${size}問</strong><span>${size === 3 ? "サクッと" : "おすすめ"}</span></button>`).join("")}</div><div class="focus-start"><div><small>${selected ? LABS[selected.lab].short : "ジャンルをえらんでね"}</small><strong>${selected?.label || "まだえらんでいません"}</strong></div><button class="primary-button" data-action="start-focus" ${selected ? "" : "disabled"}>特訓スタート！ <span>→</span></button></div><p class="focus-note">まちがえた言葉は、少しあとに別の問題でもう一度出てくるよ。</p></section></main>`;
@@ -181,11 +170,6 @@ function syncBadges() {
   if (added.length) state.newBadges.push(...added);
   state.badgeIds = merged;
   saveBadges(merged);
-}
-
-function startDiagnostic() {
-  const items = buildDiagnosticSession(QUESTIONS, DIAGNOSTIC_IDS, state.profile);
-  startQueue(items, "diagnosis", "diagnostic");
 }
 
 function questionTemplate() {
@@ -226,7 +210,7 @@ function chooseOption(id) {
   if (!q || !option) return;
   state.selectedId = id; state.quality = option.quality; recordAnswer(q, option.quality);
   if (option.quality === "incorrect" && state.tryNumber === 1) {
-    const retryLevel = state.sessionKind === "focus" ? 6 : state.profile.challengeLevel;
+    const retryLevel = (q.contentLevel || 1) + 1;
     const retry = findDelayedRetry(QUESTIONS, q, new Set(state.queue.map((item) => item.questionId)), retryLevel);
     if (retry) state.queue.splice(Math.min(state.queue.length, state.position + 3), 0, { questionId:retry.id, role:"retry" });
   }
@@ -325,8 +309,6 @@ app.addEventListener("click", (event) => {
   if (button.dataset.option) return chooseOption(button.dataset.option);
   if (button.dataset.size) return startQueue(buildSession(QUESTIONS, state.profile, state.attempts, Number(button.dataset.size)), "research", "adaptive");
   const action = button.dataset.action;
-  if (action === "diagnostic") return startDiagnostic();
-  if (action === "finish-onboarding") { state.onboardingResult = false; state.screen = "home"; return render(); }
   if (action === "home") { state.screen = "home"; state.sessionComplete = false; return render(); }
   if (action === "carte") { state.screen = "carte"; return render(); }
   if (action === "vocabulary") { state.screen = "vocabulary"; return render(); }
