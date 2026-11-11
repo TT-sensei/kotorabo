@@ -131,7 +131,6 @@ export const SYSTEMATIC_VOCABULARY = entries.filter((entry) => entry.skill !== "
   id: `sys-vocab-${entry.id}`,
   term: entry.best,
   category: CATEGORY_BY_SKILL[entry.skill],
-  gradeBand: entry.level <= 2 ? "1・2年" : entry.level <= 4 ? "3・4年" : "5・6年",
   meaning: entry.reason,
   example: entry.context,
   related: entry.acceptable || "",
