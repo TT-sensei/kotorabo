@@ -41,5 +41,8 @@ export const question = (lab, prefix) => (
     hint,
     explanation,
     ...(meta.tryIt ? { tryIt: meta.tryIt } : {}),
+    ...(meta.vocabularyTerm ? { vocabularyTerm: meta.vocabularyTerm } : {}),
+    ...(meta.vocabularyMeaning ? { vocabularyMeaning: meta.vocabularyMeaning } : {}),
+    ...(meta.vocabularyExample ? { vocabularyExample: meta.vocabularyExample } : {}),
   },
 ];
