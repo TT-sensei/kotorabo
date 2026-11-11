@@ -114,3 +114,64 @@ body{font-size:18px}
 .teal b,.teal.lab-token,.lab-card.teal>div>span,.diagnosis-item.teal>span,.skill-list .teal{background:var(--teal)}
 .lab-card.rose{color:var(--rose);border-top-color:var(--rose)}
 .lab-card.teal{color:var(--teal);border-top-color:var(--teal)}
+
+
+/* ことラボ：学年選択をなくしたシンプルな入口 */
+.home-redesign{max-width:1160px;padding-top:34px}
+.home-hero-simple{min-height:285px;align-items:stretch;padding:34px 42px}
+.home-hero-copy{position:relative;z-index:3;max-width:690px}
+.home-hero-copy h1{font-size:clamp(34px,4.2vw,50px);line-height:1.25}
+.home-hero-copy>p:not(.eyebrow){max-width:600px;font-size:16px!important}
+.home-start-button{display:inline-flex;align-items:center;gap:28px;margin-top:20px;padding:16px 23px;border:0;border-radius:14px;background:#f4d77c;color:#29483f;font-size:17px;font-weight:900;box-shadow:0 8px 20px rgba(0,0,0,.12)}
+.home-start-button:hover{transform:translateY(-2px);background:#ffe49a}
+.home-start-note{display:block;margin-top:10px;color:#d8eee7;font-size:12px;line-height:1.5}
+.home-hero-side{position:relative;z-index:2;display:flex;min-width:230px;flex-direction:column;align-items:flex-end;justify-content:space-between}
+.home-hero-side .research-status{min-width:195px}
+.home-hero-side .hero-navi{position:static;width:190px;max-height:135px;object-fit:contain;filter:drop-shadow(0 8px 10px rgba(0,0,0,.12))}
+.home-discover{margin-top:30px}
+.home-theme-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:11px}
+.home-theme-grid .theme-card{min-height:94px;padding:13px}
+.home-theme-grid .theme-card-icon{width:40px;height:40px;flex-basis:40px}
+.home-theme-grid .theme-card-copy{gap:4px}
+.home-theme-grid .theme-card-copy strong{font-size:14px}
+.home-theme-grid .theme-card-copy small{font-size:11px}
+.home-theme-grid .theme-card-copy em{font-size:10px}
+.home-library-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:24px}
+.home-library-card{display:flex;align-items:center;gap:12px;min-width:0;padding:15px 16px;border:1px solid var(--line);border-radius:16px;background:#fff;text-align:left;box-shadow:0 6px 18px rgba(31,75,64,.045)}
+.home-library-card:hover{border-color:#a9cfc1;box-shadow:0 9px 22px rgba(31,75,64,.08)}
+.home-library-icon{display:grid;place-items:center;width:42px;height:42px;flex:0 0 auto;border-radius:13px;background:#e8f4ef;color:var(--green);font-size:21px;font-weight:900}
+.home-library-card>span:nth-child(2){display:flex;min-width:0;flex-direction:column;gap:2px}
+.home-library-card small{color:var(--muted);font-size:10px}
+.home-library-card strong{font-size:15px}
+.home-library-card em{color:var(--muted);font-size:10px;font-style:normal}
+.home-library-card>b{margin-left:auto;color:var(--green);font-size:19px}
+.adaptive-note{margin:16px 0 0;padding:13px 15px;border-radius:12px;background:#f2f8f5;color:#49685d;font-size:14px;line-height:1.7}
+@media(max-width:850px){
+ .home-hero-simple{padding:29px}
+ .home-hero-side{min-width:180px}
+ .home-hero-side .hero-navi{width:150px}
+ .home-theme-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:620px){
+ .home-redesign{padding:18px 13px 48px}
+ .home-hero-simple{display:flex;min-height:0;flex-direction:column;gap:15px;padding:23px 20px}
+ .home-hero-copy{max-width:none}
+ .home-hero-copy h1{font-size:31px}
+ .home-hero-copy>p:not(.eyebrow){max-width:100%;font-size:13px!important}
+ .home-start-button{width:100%;justify-content:center;margin-top:16px;padding:15px}
+ .home-start-note{font-size:11px}
+ .home-hero-side{width:100%;min-width:0;flex-direction:row;align-items:center}
+ .home-hero-side .research-status{min-width:175px;padding:8px 10px}
+ .home-hero-side .hero-navi{width:112px;max-height:92px}
+ .home-discover{margin-top:25px}
+ .home-discover .section-heading h2{font-size:20px}
+ .home-theme-grid{grid-template-columns:1fr 1fr;gap:8px}
+ .home-theme-grid .theme-card{min-height:104px;gap:8px;padding:10px}
+ .home-theme-grid .theme-card-icon{width:34px;height:34px;flex-basis:34px;font-size:17px}
+ .home-theme-grid .theme-card-copy strong{font-size:12px}
+ .home-theme-grid .theme-card-copy small{font-size:10px}
+ .home-theme-grid .theme-arrow{font-size:15px}
+ .home-library-row{grid-template-columns:1fr;gap:8px;margin-top:18px}
+ .home-library-card{padding:11px 13px}
+ .home-library-card>span:nth-child(2){flex:1}
+}
