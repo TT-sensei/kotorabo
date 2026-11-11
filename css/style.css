@@ -175,3 +175,41 @@ body{font-size:18px}
  .home-library-card{padding:11px 13px}
  .home-library-card>span:nth-child(2){flex:1}
 }
+
+
+/* 学びノート：出会った語彙を自分の言葉にする */
+.home-library-row{grid-template-columns:repeat(4,minmax(0,1fr))}
+.vocab-notebook-link{display:flex;align-items:center;gap:13px;margin:18px 0;padding:14px 17px;border:1px solid #d9e9e1;border-radius:15px;background:#f3f8f5}
+.vocab-notebook-link>span{display:grid;place-items:center;width:42px;height:42px;border-radius:12px;background:#e0eee7;color:#27634f;font-size:22px}
+.vocab-notebook-link>div{display:flex;flex:1;flex-direction:column;gap:3px}
+.vocab-notebook-link>div strong{font-size:15px}
+.vocab-notebook-link>div small{color:#62786e;font-size:12px}
+.vocab-notebook-link>button{padding:9px 12px;border:1px solid #bfd8cb;border-radius:10px;background:#fff;color:#285d4b;font-weight:800}
+.word-note-toggle{width:100%;margin-top:13px;padding:10px;border:1px solid #c8ddd2;border-radius:10px;background:#f5faf7;color:#285d4b;font-weight:800}
+.word-note-editor{display:grid;gap:11px;margin-top:12px;padding:14px;border:1px solid #d5e5dc;border-radius:13px;background:#f8fbf9}
+.word-note-editor label{display:grid;gap:5px;color:#38594b;font-size:12px;font-weight:800}
+.word-note-editor textarea{width:100%;min-height:62px;resize:vertical;padding:10px;border:1px solid #d3ded8;border-radius:9px;background:#fff;color:#263b32;font:inherit;font-size:14px;line-height:1.6}
+.note-editor-actions{display:flex;justify-content:flex-end;gap:8px}
+.note-editor-actions>button{padding:10px 13px;border:1px solid #d2dfd8;border-radius:9px;background:#fff;color:#52665c;font-weight:700}
+.note-editor-actions>.primary-button{border:0;background:#24634f;color:#fff}
+.saved-note-preview{margin-top:12px;padding:11px 12px;border-left:3px solid #8bb9a2;border-radius:0 9px 9px 0;background:#f2f7f3}
+.saved-note-preview b{color:#426c56;font-size:11px}
+.saved-note-preview p{margin:5px 0 0;color:#46594f;font-size:13px;white-space:pre-wrap;overflow-wrap:anywhere}
+.notebook-guide{display:flex;flex-wrap:wrap;gap:9px 16px;margin:18px 0;padding:15px 17px;border-radius:13px;background:#f1f7f3;color:#466254;font-size:12px}
+.notebook-guide b{width:100%;color:#2e5744;font-size:14px}
+.notebook-entry-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px}
+.notebook-entry-list article{padding:17px;border:1px solid #dfe9e3;border-radius:15px;background:#fff}
+.notebook-entry-list article>div{margin-bottom:12px}
+.notebook-entry-list small{color:#6b8878;font-size:11px}
+.notebook-entry-list h2{margin:3px 0 0;color:#294a3b;font-size:21px}
+.notebook-entry-list p{margin:10px 0;padding-top:9px;border-top:1px solid #edf1ee;color:#4d5f55;font-size:13px;line-height:1.7;white-space:pre-wrap;overflow-wrap:anywhere}
+.notebook-entry-list p b{display:block;margin-bottom:3px;color:#668071;font-size:10px}
+.notebook-entry-list article>button{margin-top:8px;padding:8px 11px;border:1px solid #cbded2;border-radius:9px;background:#f5faf7;color:#2e654e;font-weight:800}
+@media(max-width:850px){.home-library-row{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:620px){
+ .vocab-notebook-link{align-items:flex-start;flex-wrap:wrap;padding:12px}
+ .vocab-notebook-link>div{min-width:calc(100% - 65px)}
+ .vocab-notebook-link>button{width:100%}
+ .notebook-entry-list{grid-template-columns:1fr}
+ .notebook-guide{display:grid;gap:7px}
+}
