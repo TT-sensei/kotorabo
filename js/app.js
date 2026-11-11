@@ -210,7 +210,7 @@ function chooseOption(id) {
   if (!q || !option) return;
   state.selectedId = id; state.quality = option.quality; recordAnswer(q, option.quality);
   if (option.quality === "incorrect" && state.tryNumber === 1) {
-    const retryLevel = (q.contentLevel || 1) + 1;
+    const retryLevel = q.contentLevel || 1;
     const retry = findDelayedRetry(QUESTIONS, q, new Set(state.queue.map((item) => item.questionId)), retryLevel);
     if (retry) state.queue.splice(Math.min(state.queue.length, state.position + 3), 0, { questionId:retry.id, role:"retry" });
   }
