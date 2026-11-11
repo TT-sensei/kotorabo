@@ -74,14 +74,35 @@ test("今日のチャレンジは学年選択なしで5問を重複なく編成�
   assert.ok(session.every((item) => QUESTIONS.some((question) => question.id === item.questionId)));
 });
 
-test("6ジャンルすべてで5問の特訓を編成できる", () => {
+test("チャレンジのstretchは可能な場合に適応レベルより一段上を出す", () => {
+  const session = buildSession(QUESTIONS, {}, [], 5);
+  const stretch = session.find((item) => item.role === "stretch");
+  assert.ok(stretch, "stretch role exists");
+  const question = QUESTIONS.find((item) => item.id === stretch.questionId);
+  const target = adaptiveLevelForSkill(question.skill, QUESTIONS, []);
+  assert.ok(question.contentLevel > target, `${question.id}: stretch should exceed ${target}`);
+});
+
+test("6ジャンルすべてで3問・5問の特訓を必ず編成できる", () => {
   for (const skill of SKILL_MAP) {
-    const session = buildFocusSession(QUESTIONS, { grade:3, challengeLevel:3 }, [], skill.id, 5);
-    const questions = session.map((item) => QUESTIONS.find((question) => question.id === item.questionId));
+    for (const size of [3, 5]) {
+      const session = buildFocusSession(QUESTIONS, { grade:3, challengeLevel:3 }, [], skill.id, size);
+      const questions = session.map((item) => QUESTIONS.find((question) => question.id === item.questionId));
+      assert.equal(session.length, size, `${skill.id}: ${size}問`);
+      assert.equal(new Set(session.map((item) => item.questionId)).size, size, `${skill.id}: unique`);
+      assert.ok(questions.every((question) => question.lab === skill.lab && question.skill === skill.id), `${skill.id}: same skill`);
+    }
+  }
+});
+
+test("直近の問題が多くても特訓の問題数を確保する", () => {
+  for (const skill of SKILL_MAP) {
+    const recent = QUESTIONS.filter((question) => question.skill === skill.id).slice(0, 5).map((question) => ({
+      skill:skill.id, questionId:question.id, quality:"best", usedHint:false,
+    }));
+    const session = buildFocusSession(QUESTIONS, {}, recent, skill.id, 5);
     assert.equal(session.length, 5, skill.id);
-    assert.equal(new Set(session.map((item) => item.questionId)).size, 5, `${skill.id}: unique`);
-    assert.ok(questions.every((question) => question.lab === skill.lab), `${skill.id}: same domain`);
-    assert.ok(questions.some((question) => question.skill === skill.id), `${skill.id}: selected skill`);
+    assert.equal(new Set(session.map((item) => item.questionId)).size, 5, skill.id);
   }
 });
 
@@ -168,6 +189,17 @@ test("「適切」と意味が重なる「適当」を誤答選択肢にしな�
 test("選択肢の並び替えは再現可能", () => {
   const sample = QUESTIONS[0];
   assert.deepEqual(orderQuestionOptions(sample), orderQuestionOptions(sample));
+});
+
+test("正解の表示位置は4か所に偏りなく分散する", () => {
+  const positions = [0, 0, 0, 0];
+  QUESTIONS.forEach((question) => {
+    const ordered = orderQuestionOptions(question);
+    positions[ordered.findIndex((option) => option.quality === "best")] += 1;
+  });
+  positions.forEach((count, index) => {
+    assert.ok(count >= 40 && count <= 100, `position ${index + 1}: ${count}`);
+  });
 });
 
 test("達成バッジは6ジャンルに対応し、学習過程も評価する", () => {
