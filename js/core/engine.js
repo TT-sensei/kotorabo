@@ -26,7 +26,7 @@ export const orderQuestionOptions = (question) => {
 export function buildDiagnosticSession(bank, diagnosticIds, profile) {
   const targetLevel = profile.challengeLevel ?? profile.grade;
   const diagnosticSet = new Set(diagnosticIds);
-  const available = bank.filter((question) => diagnosticSet.has(question.id) && question.gradeMin <= targetLevel);
+  const available = bank.filter((question) => diagnosticSet.has(question.id) && question.contentLevel <= targetLevel);
 
   return [...new Set(SKILL_MAP.map((skill) => skill.lab))].map((lab) => {
     const candidates = stableSort(
