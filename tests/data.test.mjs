@@ -6,6 +6,7 @@ import { COMPOUND_STRUCTURE_DATA } from "../js/data/question-sets/compound-struc
 import { VOCABULARY_EXPANSION_DATA } from "../js/data/question-sets/vocabulary-expansion.js";
 import { LANGUAGE_USE_DATA } from "../js/data/question-sets/language-use.js";
 import { MUNICIPAL_VOCABULARY_DATA } from "../js/data/question-sets/municipal-vocabulary.js";
+import { EARLY_VOCABULARY_DATA } from "../js/data/question-sets/early-vocabulary.js";
 import { LABS, SKILL_MAP } from "../js/data/skill-map.js";
 import { adaptiveLevelForSkill, buildFocusSession, buildSession, orderQuestionOptions } from "../js/core/engine.js";
 import { BADGES, evaluateBadgeIds } from "../js/data/badges.js";
@@ -17,7 +18,7 @@ test("学習ジャンルは語彙に特化した6ジャンル", () => {
 });
 
 test("有効な問題バンクは語彙問題だけで構成される", () => {
-  assert.equal(QUESTIONS.length, 288);
+  assert.equal(QUESTIONS.length, 324);
   assert.equal(VOCABULARY_EXPANSION_DATA.length, 60);
   assert.equal(MUNICIPAL_VOCABULARY_DATA.length, 126);
   assert.equal(new Set(QUESTIONS.map((question) => question.id)).size, QUESTIONS.length);
@@ -129,7 +130,7 @@ test("初回のチャレンジは各ジャンルの入門段階から出題す�
 });
 
 test("ことばファイルは問題で出会う語句だけを集め、問題IDと結び付く", () => {
-  assert.equal(VOCABULARY_DATA.length, 239);
+  assert.ok(VOCABULARY_DATA.length > 239);
   assert.ok(VOCABULARY_DATA.every((word) => word.contentLevel >= 1 && word.contentLevel <= 6));
   assert.ok(VOCABULARY_DATA.every((word) => word.levelLabel === `内容L${word.contentLevel}`));
   assert.ok(VOCABULARY_DATA.every((word) => !Object.hasOwn(word, "gradeBand") && !Object.hasOwn(word, "gradeMin")));
@@ -192,6 +193,22 @@ test("新しい教科横断語彙126問は6ジャンルに均等に追加され�
     assert.ok(question.vocabularyMeaning, id);
     assert.ok(question.vocabularyExample, id);
     assert.ok(question.context && question.hint && question.explanation, id);
+  });
+});
+
+test("入門語彙36問は6ジャンルに均等に追加され、L1・L2を補う", () => {
+  assert.equal(EARLY_VOCABULARY_DATA.length, 36);
+  const counts = Object.fromEntries(Object.keys(LABS).map((lab) => [lab, 0]));
+  EARLY_VOCABULARY_DATA.forEach(([id, question]) => {
+    counts[question.lab] += 1;
+    assert.ok(question.contentLevel <= 2, id);
+    assert.ok(question.vocabularyTerm && question.vocabularyMeaning && question.vocabularyExample, id);
+    assert.ok(question.context && question.hint && question.explanation, id);
+  });
+  assert.deepEqual(counts, { meaning:6, precise:6, feelings:6, sensory:6, learning:6, structure:6 });
+  EARLY_VOCABULARY_DATA.forEach(([id, question]) => {
+    const category = LABS[question.lab].short;
+    assert.ok(VOCABULARY_DATA.some((word) => word.category === category && word.term === question.vocabularyTerm && word.questionIds.includes(id)), id);
   });
 });
 
