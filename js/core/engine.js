@@ -55,19 +55,28 @@ export function labReadiness(progress, lab) {
 }
 
 function adaptiveLevelForSkill(skillId, bank, attempts) {
+  const levels = bank
+    .filter((question) => question.skill === skillId)
+    .map((question) => question.contentLevel || 1);
+  if (!levels.length) return 1;
+  const minimum = Math.min(...levels);
+  const maximum = Math.max(...levels);
   const questionById = new Map(bank.map((question) => [question.id, question]));
   const records = attempts.filter((attempt) => attempt.skill === skillId).slice(-4);
-  if (!records.length) return 1;
+  if (!records.length) return minimum;
+
   const successfulLevels = records
     .filter((attempt) => attempt.quality === "best" && !attempt.usedHint)
-    .map((attempt) => questionById.get(attempt.questionId)?.contentLevel || 1);
+    .map((attempt) => questionById.get(attempt.questionId)?.contentLevel)
+    .filter(Number.isFinite);
+  const stableLevel = successfulLevels.length ? successfulLevels[successfulLevels.length - 1] : minimum;
   const recent = records.slice(-3);
   const recentSuccesses = recent.filter((attempt) => attempt.quality === "best" && !attempt.usedHint).length;
   const recentMisses = recent.filter((attempt) => attempt.quality === "incorrect").length;
-  const highestStable = successfulLevels.length ? Math.max(...successfulLevels) : 1;
-  if (recent.length >= 2 && recentMisses >= 2) return Math.max(1, highestStable - 1);
-  if (recent.length >= 2 && recentSuccesses >= 2) return Math.min(6, highestStable + 1);
-  return Math.max(1, Math.min(6, highestStable));
+
+  if (recent.length >= 2 && recentMisses >= 2) return Math.max(minimum, stableLevel - 1);
+  if (recent.length >= 2 && recentSuccesses >= 2) return Math.min(maximum, stableLevel + 1);
+  return Math.max(minimum, Math.min(maximum, stableLevel));
 }
 
 export function buildSession(bank, profile, attempts, size) {
@@ -86,12 +95,12 @@ export function buildSession(bank, profile, attempts, size) {
     let pool = stableSort(bank.filter((question) => {
       const level = skillLevels.get(question.skill) || 1;
       const firstAvailable = minimumLevels.get(question.skill) || 1;
-      return !used.has(question.id) && !recentIds.has(question.id) && question.contentLevel <= Math.max(level + 1, firstAvailable) && test(question);
+      return !used.has(question.id) && !recentIds.has(question.id) && question.contentLevel <= Math.max(level, firstAvailable) && test(question);
     }), `${seed}:${role}`);
     if (!pool.length) pool = stableSort(bank.filter((question) => {
       const level = skillLevels.get(question.skill) || 1;
       const firstAvailable = minimumLevels.get(question.skill) || 1;
-      return !used.has(question.id) && question.contentLevel <= Math.max(level + 1, firstAvailable) && test(question);
+      return !used.has(question.id) && question.contentLevel <= Math.max(level, firstAvailable) && test(question);
     }), `${seed}:${role}:fallback`);
     if (!pool.length) return false;
     const recentThemes = new Set(result.slice(-2).map((item) => bank.find((question) => question.id === item.questionId)?.theme).filter(Boolean));
@@ -126,7 +135,7 @@ export function buildFocusSession(bank, profile, attempts, skillId, size = 5) {
   const recentIds = new Set(attempts.slice(-5).map((item) => item.questionId));
   const seed = `focus:${skillId}:${attempts.length}:${size}`;
   const skillMinimum = Math.min(...bank.filter((question) => question.skill === skillId).map((question) => question.contentLevel || 1));
-  const candidates = bank.filter((question) => question.lab === skill.lab && question.contentLevel <= Math.max(targetLevel + 1, skillMinimum || 1));
+  const candidates = bank.filter((question) => question.lab === skill.lab && question.contentLevel <= Math.max(targetLevel, skillMinimum || 1));
   const ranked = stableSort(candidates, seed).sort((a, b) => {
     const score = (question) => {
       const exact = question.skill === skillId ? 1000 : 0;
