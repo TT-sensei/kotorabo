@@ -1,7 +1,7 @@
 import { LABS, SKILL_MAP, DEPTH_LABELS, LEVEL_WORLDS, getSkill } from "./data/skill-map.js";
 import { QUESTIONS, VOCABULARY_DATA, getQuestion } from "./data/questions.js";
 import { buildFocusSession, buildProgress, buildSession, findDelayedRetry, labReadiness, orderQuestionOptions } from "./core/engine.js";
-import { loadAttempts, loadBadges, loadProfile, resetLearningData, saveAttempts, saveBadges, saveProfile } from "./core/storage.js";
+import { loadAttempts, loadBadges, loadNotebook, loadProfile, resetLearningData, saveAttempts, saveBadges, saveNotebook, saveProfile } from "./core/storage.js";
 import { awardResearchXP, getResearchStatus } from "./core/research-xp.js";
 import { BADGES, evaluateBadgeIds, getBadge } from "./data/badges.js";
 import { NAVI, naviImage } from "./data/navi.js";
@@ -54,6 +54,8 @@ const state = {
   resetConfirm:false,
   lastXpAward:0, lastRankUp:null,
   vocabularyCategory:"すべて",
+  notebook: loadNotebook(),
+  noteWordId: null,
   badgeCategory:"すべて",
 };
 
@@ -97,6 +99,7 @@ function render() {
     state.screen === "home" ? homeTemplate() :
     state.screen === "carte" ? carteTemplate() :
     state.screen === "vocabulary" ? vocabularyTemplate() :
+    state.screen === "notebook" ? notebookTemplate() :
     state.screen === "badges" ? badgesTemplate() :
     state.screen === "settings" ? settingsTemplate() :
     state.screen === "focus" ? focusTemplate() :
@@ -135,6 +138,7 @@ function homeTemplate() {
     </section>
     <section class="home-library-row">
       <button class="home-library-card" data-action="vocabulary"><span class="home-library-icon">あ</span><span><small>出会った言葉を集める</small><strong>ことばファイル</strong><em>${foundWords}語</em></span><b>→</b></button>
+      <button class="home-library-card" data-action="notebook"><span class="home-library-icon">✎</span><span><small>自分の言葉で残す</small><strong>学びノート</strong><em>${Object.keys(state.notebook).length}語を記録</em></span><b>→</b></button>
       <button class="home-library-card" data-action="carte"><span class="home-library-icon">↗</span><span><small>学びの足あと</small><strong>できたこと</strong><em>${state.attempts.length}回チャレンジ</em></span><b>→</b></button>
       <button class="home-library-card" data-action="badges"><span class="home-library-icon">✦</span><span><small>積み重ねの記録</small><strong>達成バッジ</strong><em>${state.badgeIds.length} / ${BADGES.length}</em></span><b>→</b></button>
     </section>
@@ -258,6 +262,10 @@ function vocabularyProgress() {
   });
 }
 
+function escapeNote(value) {
+  return String(value || "").replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#39;");
+}
+
 function vocabularyTemplate() {
   const labels = ["まだ出会っていない", "出会った", "意味が分かる", "使い分けられる", "別の場面でも使える"];
   const all = vocabularyProgress();
@@ -265,7 +273,26 @@ function vocabularyTemplate() {
   const categories = ["すべて", ...new Set(VOCABULARY_DATA.map((word) => word.category))];
   const shown = found.filter((word) => state.vocabularyCategory === "すべて" || word.category === state.vocabularyCategory);
   const strong = found.filter((word) => word.stage >= 3).length;
-  return `<main class="collection-page vocabulary-page"><section class="collection-hero"><div><p class="eyebrow">ことラボ独自の記録</p><h1>ことばファイル</h1><p>問題の中で出会い、意味や使い分けを考えた言葉が集まります。</p></div><div class="collection-count"><strong>${found.length}</strong><span>出会った言葉</span><small>${strong}語を使い分けた</small></div></section><section class="collection-note"><b>📁</b><p>問題の中で出会った言葉を、意味や使い分けの成長と一緒に記録しています。</p></section><div class="filter-row" aria-label="ことばの分類">${categories.map((category) => `<button data-vocab-category="${category}" class="${state.vocabularyCategory === category ? "selected" : ""}">${category}</button>`).join("")}</div>${shown.length ? `<section class="vocabulary-grid">${shown.map((word) => `<article class="vocabulary-card stage-${word.stage}"><div><span>${word.gradeBand}</span><b>${word.category}</b></div><h2>${displayText(word.term)}</h2><p>${displayText(word.meaning)}</p><blockquote>${displayText(word.example)}</blockquote>${word.related ? `<small>近い表現：${displayText(word.related)}</small>` : ""}<footer><i>${word.stage === 4 ? "✦" : word.stage === 3 ? "◎" : word.stage === 2 ? "○" : "・"}</i><strong>${labels[word.stage]}</strong></footer></article>`).join("")}</section>` : `<section class="empty-collection"><span>あ</span><h2>${found.length ? "この分類の言葉は、これから！" : "最初の言葉を見つけよう！"}</h2><p>今日のチャレンジや特訓に取り組むと、ここに言葉が集まります。</p><button class="primary-button" data-action="home">今日のチャレンジへ →</button></section>`}<div class="collection-actions"><button class="secondary-button" data-action="carte">できたことへ</button><button class="primary-button" data-action="home">ホームへ →</button></div></main>`;
+  return `<main class="collection-page vocabulary-page"><section class="collection-hero"><div><p class="eyebrow">出会った言葉を、自分のものに</p><h1>ことばファイル</h1><p>意味や使い分けの成長を見ながら、気になった言葉を学びノートに残せます。</p></div><div class="collection-count"><strong>${found.length}</strong><span>出会った言葉</span><small>${strong}語を使い分けた</small></div></section>
+    <div class="vocab-notebook-link"><span>✎</span><div><strong>学びノート</strong><small>自分の言葉で意味や例文を書いてみよう</small></div><button data-action="notebook">ノートを見る →</button></div>
+    <div class="filter-row" aria-label="ことばの分類">${categories.map((category) => `<button data-vocab-category="${category}" class="${state.vocabularyCategory === category ? "selected" : ""}">${category}</button>`).join("")}</div>
+    ${shown.length ? `<section class="vocabulary-grid">${shown.map((word) => {
+      const note = state.notebook[word.id] || {};
+      const editing = state.noteWordId === word.id;
+      return `<article class="vocabulary-card stage-${word.stage}"><div><span>${word.gradeBand}</span><b>${word.category}</b></div><h2>${displayText(word.term)}</h2><p>${displayText(word.meaning)}</p><blockquote>${displayText(word.example)}</blockquote>${word.related ? `<small>近い表現：${displayText(word.related)}</small>` : ""}<footer><i>${word.stage === 4 ? "✦" : word.stage === 3 ? "◎" : word.stage === 2 ? "○" : "・"}</i><strong>${labels[word.stage]}</strong></footer>
+      <button class="word-note-toggle" data-note-word="${word.id}">${note.meaning || note.example || note.thought ? "✎ ノートを編集する" : "✎ 学びノートに書く"}</button>
+      ${editing ? `<div class="word-note-editor"><label>自分の言葉で意味を書く<textarea id="note-meaning" rows="2" placeholder="この言葉は、どんな意味かな？">${escapeNote(note.meaning)}</textarea></label><label>自分で例文を作る<textarea id="note-example" rows="2" placeholder="この言葉を使って文を作ってみよう">${escapeNote(note.example)}</textarea></label><label>気づいたこと・似た言葉との違い<textarea id="note-thought" rows="2" placeholder="新しく気づいたことを書こう">${escapeNote(note.thought)}</textarea></label><div class="note-editor-actions"><button data-note-cancel>とじる</button><button class="primary-button" data-note-save="${word.id}">ノートを保存</button></div></div>` : note.meaning || note.example || note.thought ? `<div class="saved-note-preview"><b>✎ 自分の学びメモ</b><p>${escapeNote(note.meaning || note.example || note.thought)}</p></div>` : ""}
+      </article>`;
+    }).join("")}</section>` : `<section class="empty-collection"><span>あ</span><h2>${found.length ? "この分類の言葉は、これから！" : "最初の言葉を見つけよう！"}</h2><p>今日のチャレンジや特訓に取り組むと、ここに言葉が集まります。</p><button class="primary-button" data-action="home">今日のことばに挑戦 →</button></section>`}
+    <div class="collection-actions"><button class="secondary-button" data-action="carte">できたことへ</button><button class="primary-button" data-action="home">ホームへ →</button></div></main>`;
+}
+
+function notebookTemplate() {
+  const entries = Object.entries(state.notebook).filter(([id, note]) => VOCABULARY_DATA.some((word) => word.id === id) && (note.meaning || note.example || note.thought)).map(([id, note]) => ({ word:VOCABULARY_DATA.find((item) => item.id === id), note })).filter((item) => item.word);
+  return `<main class="collection-page notebook-page"><section class="collection-hero"><div><p class="eyebrow">自分の言葉で、学びを残そう</p><h1>学びノート</h1><p>意味を説明したり、例文を作ったり。書きためた言葉は、いつでも見返せます。</p></div><div class="collection-count"><strong>${entries.length}</strong><span>ノートにまとめた言葉</span></div></section>
+    <div class="notebook-guide"><b>書くときのヒント</b><span>① 自分の言葉で意味を書く</span><span>② その言葉を使って文を作る</span><span>③ 似た言葉との違いや気づきを残す</span></div>
+    ${entries.length ? `<section class="notebook-entry-list">${entries.map(({word,note}) => `<article><div><small>${word.category}</small><h2>${displayText(word.term)}</h2></div>${note.meaning ? `<p><b>自分の説明</b>${escapeNote(note.meaning)}</p>` : ""}${note.example ? `<p><b>自分の例文</b>${escapeNote(note.example)}</p>` : ""}${note.thought ? `<p><b>気づいたこと</b>${escapeNote(note.thought)}</p>` : ""}<button data-edit-note="${word.id}">編集する →</button></article>`).join("")}</section>` : `<section class="empty-collection"><span>✎</span><h2>最初の学びを残そう</h2><p>ことばファイルで気になった言葉を選び、「学びノートに書く」からまとめられるよ。</p><button class="primary-button" data-action="vocabulary">ことばファイルを見る →</button></section>`}
+    <div class="collection-actions"><button class="secondary-button" data-action="vocabulary">ことばファイルへ</button><button class="primary-button" data-action="home">ホームへ →</button></div></main>`;
 }
 
 function badgeGroup(badge) {
@@ -305,13 +332,28 @@ app.addEventListener("click", (event) => {
   if (button.dataset.focusSkill) { state.focusSkill = button.dataset.focusSkill; return render(); }
   if (button.dataset.focusSize) { state.focusSize = Number(button.dataset.focusSize); return render(); }
   if (button.dataset.vocabCategory) { state.vocabularyCategory = button.dataset.vocabCategory; return render(); }
+  if (button.dataset.noteWord) { state.noteWordId = state.noteWordId === button.dataset.noteWord ? null : button.dataset.noteWord; return render(); }
+  if (button.dataset.noteCancel !== undefined) { state.noteWordId = null; return render(); }
+  if (button.dataset.noteSave) {
+    const id = button.dataset.noteSave;
+    state.notebook[id] = {
+      meaning: app.querySelector("#note-meaning")?.value.trim() || "",
+      example: app.querySelector("#note-example")?.value.trim() || "",
+      thought: app.querySelector("#note-thought")?.value.trim() || "",
+      updatedAt: new Date().toISOString(),
+    };
+    if (!state.notebook[id].meaning && !state.notebook[id].example && !state.notebook[id].thought) delete state.notebook[id];
+    saveNotebook(state.notebook); state.noteWordId = null; return render();
+  }
+  if (button.dataset.editNote) { state.screen = "vocabulary"; state.vocabularyCategory = "すべて"; state.noteWordId = button.dataset.editNote; return render(); }
   if (button.dataset.badgeCategory) { state.badgeCategory = button.dataset.badgeCategory; return render(); }
   if (button.dataset.option) return chooseOption(button.dataset.option);
   if (button.dataset.size) return startQueue(buildSession(QUESTIONS, state.profile, state.attempts, Number(button.dataset.size)), "research", "adaptive");
   const action = button.dataset.action;
   if (action === "home") { state.screen = "home"; state.sessionComplete = false; return render(); }
   if (action === "carte") { state.screen = "carte"; return render(); }
-  if (action === "vocabulary") { state.screen = "vocabulary"; return render(); }
+  if (action === "vocabulary") { state.screen = "vocabulary"; state.noteWordId = null; return render(); }
+  if (action === "notebook") { state.screen = "notebook"; return render(); }
   if (action === "badges") { state.screen = "badges"; return render(); }
   if (action === "settings") { state.screen = "settings"; return render(); }
   if (action === "focus") { state.screen = "focus"; return render(); }
@@ -328,7 +370,7 @@ app.addEventListener("click", (event) => {
   }
   if (action === "reset") {
     if (!state.resetConfirm) { state.resetConfirm = true; return render(); }
-    resetLearningData(); Object.assign(state, { profile:{ furigana:"grade", onboarded:true, researchXP:0, createdAt:new Date().toISOString() }, attempts:[], badgeIds:[], newBadges:[], screen:"home", onboardingResult:false, resetConfirm:false, focusLab:"meaning", focusSkill:"vocab.meaning", focusSize:5 }); return render();
+    resetLearningData(); Object.assign(state, { profile:{ furigana:"grade", onboarded:true, researchXP:0, createdAt:new Date().toISOString() }, attempts:[], badgeIds:[], newBadges:[], notebook:{}, screen:"home", onboardingResult:false, resetConfirm:false, focusLab:"meaning", focusSkill:"vocab.meaning", focusSize:5 }); saveNotebook({}); return render();
   }
 });
 
