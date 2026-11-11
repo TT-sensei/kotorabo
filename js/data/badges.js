@@ -24,7 +24,7 @@ const skillBadges = [
   ["vocab.precise","ぴったりのことば"],
   ["vocab.feelings","気持ち・人がら"],
   ["vocab.sensory","動き・様子"],
-  ["vocab.expressions","昔からの表現"],
+  ["vocab.learning","学習・思考"],
   ["vocab.structure","ことばの成り立ち"],
 ].map(([skillId, label], index) => ({
   id:`skill-${skillId.replaceAll(".", "-")}`,
@@ -39,7 +39,7 @@ const labInfo = [
   ["precise","ぴったり","word-sprout","great-answer"],
   ["feelings","気持ち","expression","connection"],
   ["sensory","動き・様子","word-tree","problem-solver"],
-  ["expressions","昔からの表現","key-point","great-answer"],
+  ["learning","学習・思考","key-point","knowledge"],
   ["structure","成り立ち","paraphrase","knowledge"],
 ];
 
