@@ -144,7 +144,7 @@ export function buildFocusSession(bank, profile, attempts, skillId, size = 5) {
 }
 export function findDelayedRetry(bank, current, usedIds, level) {
   const currentTags = new Set([...(current.thinkingTags || []), ...(current.crossTags || [])]);
-  const candidates = bank.filter((q) => q.id !== current.id && !usedIds.has(q.id) && q.skill === current.skill && q.gradeMin <= level && (q.similarGroup !== current.similarGroup || q.transferGroup === current.transferGroup));
+  const candidates = bank.filter((q) => q.id !== current.id && !usedIds.has(q.id) && q.skill === current.skill && q.contentLevel <= level && (q.similarGroup !== current.similarGroup || q.transferGroup === current.transferGroup));
   return candidates.sort((a, b) => {
     const score = (question) => {
       const tags = [...(question.thinkingTags || []), ...(question.crossTags || [])];
