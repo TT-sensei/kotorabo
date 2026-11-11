@@ -139,6 +139,13 @@ test("新しい教科横断語彙36問は6ジャンルに均等に追加され�
   });
 });
 
+test("「適切」と意味が重なる「適当」を誤答選択肢にしない", () => {
+  const question = QUESTIONS.find((item) => item.id === "kb2-mv-precise-05");
+  assert.ok(question);
+  assert.ok(question.options.some((option) => option.text === "不明確"));
+  assert.ok(question.options.every((option) => option.text !== "適当"));
+});
+
 test("選択肢の並び替えは再現可能", () => {
   const sample = QUESTIONS[0];
   assert.deepEqual(orderQuestionOptions(sample), orderQuestionOptions(sample));
