@@ -1,4 +1,4 @@
-# 問題データ仕様 v2.0
+# 問題データ仕様 v2.1
 
 ことラボは語彙学習に特化します。問題は `js/data/question-sets/` に置き、`js/data/questions.js` で統合します。
 
@@ -7,10 +7,11 @@
 | ファイル | 内容 |
 |---|---|
 | `words.js` | 基本語彙、意味、類義語、対義語、場面に合う語 |
-| `systematic-language.js` | 学年段階を意識した意味・仲間、気持ち、ことわざ、成り立ち、学習語彙 |
+| `systematic-language.js` | 学年段階を意識した意味・仲間、気持ち、学習語彙、言葉の成り立ち |
 | `compound-structure.js` | 二字熟語の構成 |
+| `vocabulary-expansion.js` | 6ジャンルに追加した独自語彙60問 |
 
-旧版の `sentence.js`、`connection.js`、`passage.js`、`connectives-extra.js` は、現在の問題バンクに読み込みません。
+旧版の `sentence.js`、`connection.js`、`passage.js`、`connectives-extra.js` は、現在の問題バンクに読み込みません。ことわざ・慣用句・故事成語は専用アプリ「ことばのしるべ」に集約し、ことラボの有効な問題バンクには含めません。
 
 ## 6つのジャンルID
 
@@ -20,8 +21,8 @@
 | `precise` | ぴったりのことば |
 | `feelings` | 気持ち・人がら |
 | `sensory` | 動き・様子・感覚 |
-| `expressions` | ことわざ・慣用句・故事成語 |
-| `structure` | ことばの成り立ち |
+| `learning` | 学習・思考のことば |
+| `structure` | ことばの成り立ち・熟語の構成 |
 
 問題データの `lab` は上記ID、`skill` は `vocab.<ジャンルID>` とします。
 
