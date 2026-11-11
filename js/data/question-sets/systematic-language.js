@@ -108,7 +108,7 @@ function buildOptions(entry) {
 export const SYSTEMATIC_LANGUAGE_DATA = entries.filter((entry) => entry.skill !== "sentence.register_keigo").map((entry) => [
   `sys-${entry.id}`,
   {
-    lab: LAB_BY_SKILL[entry.skill] || "words",
+    lab: "words",
     skill: entry.skill,
     subskill: entry.subskill,
     contentLevel: entry.level,
