@@ -54,7 +54,7 @@ export function labReadiness(progress, lab) {
   return { label: value >= 70 ? "ちがうお話へ！" : value >= 40 ? "いい感じ！" : "少しずついこう", value };
 }
 
-function adaptiveLevelForSkill(skillId, bank, attempts) {
+export function adaptiveLevelForSkill(skillId, bank, attempts) {
   const levels = bank
     .filter((question) => question.skill === skillId)
     .map((question) => question.contentLevel || 1);
