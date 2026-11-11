@@ -66,7 +66,8 @@
 | 基本の語彙問題 | `js/data/question-sets/words.js` |
 | 学年段階を意識した独自語彙 | `js/data/question-sets/systematic-language.js` |
 | 熟語の構成の問題 | `js/data/question-sets/compound-structure.js` |
-| 追加語彙60問 | `js/data/question-sets/vocabulary-expansion.js` |\n| 文脈で使う語彙12問 | `js/data/question-sets/language-use.js` |
+| 追加語彙60問 | `js/data/question-sets/vocabulary-expansion.js` |
+| 文脈で使う語彙12問 | `js/data/question-sets/language-use.js` |
 | 問題データ共通処理 | `js/data/question-sets/helpers.js` |
 | 達成バッジ | `js/data/badges.js` |
 | ナビキャラクター | `js/data/navi.js` |
