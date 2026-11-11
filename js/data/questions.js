@@ -90,17 +90,17 @@ for (const question of QUESTIONS) {
   const existing = vocabularyMap.get(key);
   if (existing) {
     existing.questionIds.push(question.id);
-    existing.gradeMin = Math.min(existing.gradeMin, question.gradeMin || question.contentLevel);
+    existing.contentLevel = Math.min(existing.contentLevel, question.contentLevel || 1);
     continue;
   }
 
-  const gradeMin = question.gradeMin || question.contentLevel;
+  const contentLevel = question.contentLevel || 1;
   vocabularyMap.set(key, {
     id: `vocab-${question.id}`,
     term,
     category: LABS[question.lab].short,
-    gradeBand: gradeMin <= 2 ? "1・2年" : gradeMin <= 4 ? "3・4年" : "5・6年",
-    gradeMin,
+    contentLevel,
+    levelLabel: `内容L${contentLevel}`,
     meaning: question.vocabularyMeaning || saved?.meaning || question.explanation || "問題の中で意味を確かめた言葉です。",
     example: question.vocabularyExample || saved?.example || question.context || question.prompt,
     related: saved?.related || related?.text || "",
