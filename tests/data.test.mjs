@@ -3,18 +3,20 @@ import assert from "node:assert/strict";
 import { QUESTIONS, DIAGNOSTIC_IDS, VOCABULARY_DATA } from "../js/data/questions.js";
 import { SYSTEMATIC_VOCABULARY } from "../js/data/question-sets/systematic-language.js";
 import { COMPOUND_STRUCTURE_DATA } from "../js/data/question-sets/compound-structure.js";
+import { VOCABULARY_EXPANSION_DATA } from "../js/data/question-sets/vocabulary-expansion.js";
 import { LABS, SKILL_MAP } from "../js/data/skill-map.js";
 import { buildDiagnosticSession, buildFocusSession, buildSession, orderQuestionOptions } from "../js/core/engine.js";
 import { BADGES, evaluateBadgeIds } from "../js/data/badges.js";
 
 test("学習ジャンルは語彙に特化した6ジャンル", () => {
-  assert.deepEqual(Object.keys(LABS), ["meaning", "precise", "feelings", "sensory", "expressions", "structure"]);
+  assert.deepEqual(Object.keys(LABS), ["meaning", "precise", "feelings", "sensory", "learning", "structure"]);
   assert.equal(SKILL_MAP.length, 6);
   assert.ok(SKILL_MAP.every((skill) => skill.id.startsWith("vocab.")));
 });
 
 test("有効な問題バンクは語彙問題だけで構成される", () => {
-  assert.equal(QUESTIONS.length, 102);
+  assert.equal(QUESTIONS.length, 150);
+  assert.equal(VOCABULARY_EXPANSION_DATA.length, 60);
   assert.equal(new Set(QUESTIONS.map((question) => question.id)).size, QUESTIONS.length);
   const skillIds = new Set(SKILL_MAP.map((skill) => skill.id));
   QUESTIONS.forEach((question) => {
@@ -29,6 +31,7 @@ test("有効な問題バンクは語彙問題だけで構成される", () => {
     assert.ok(question.depth >= 1 && question.depth <= 6, `${question.id}: depth`);
   });
   assert.ok(QUESTIONS.every((question) => !question.skill.startsWith("sentence.") && !question.skill.startsWith("connection.") && !question.skill.startsWith("passage.")));
+  assert.ok(QUESTIONS.every((question) => question.lab !== "expressions"));
 });
 
 test("診断は学年に応じて利用できる語彙ジャンルから出題する", () => {
@@ -70,7 +73,7 @@ test("学年とチャレンジレベルは分けて扱える", () => {
 });
 
 test("ことばファイルは問題で出会う語句だけを集め、問題IDと結び付く", () => {
-  assert.ok(VOCABULARY_DATA.length >= 70);
+  assert.ok(VOCABULARY_DATA.length >= 140);
   assert.equal(new Set(VOCABULARY_DATA.map((word) => word.id)).size, VOCABULARY_DATA.length);
   const ids = new Set(QUESTIONS.map((question) => question.id));
   VOCABULARY_DATA.forEach((word) => {
@@ -79,11 +82,12 @@ test("ことばファイルは問題で出会う語句だけを集め、問題ID
     word.questionIds.forEach((id) => assert.ok(ids.has(id), `${word.id}: ${id}`));
   });
   assert.deepEqual(new Set(VOCABULARY_DATA.map((word) => word.category)), new Set(Object.values(LABS).map((lab) => lab.short)));
+  assert.ok(VOCABULARY_DATA.every((word) => word.category !== "昔からの表現"));
 });
 
-test("学年段階の語彙セットには敬語などの文法系問題を含めない", () => {
-  assert.equal(SYSTEMATIC_VOCABULARY.length, 60);
-  assert.ok(SYSTEMATIC_VOCABULARY.every((word) => word.category !== "相手に合わせる言葉"));
+test("学年段階の語彙セットにはことわざ・慣用句・敬語などを含めない", () => {
+  assert.equal(SYSTEMATIC_VOCABULARY.length, 48);
+  assert.ok(SYSTEMATIC_VOCABULARY.every((word) => word.category !== "相手に合わせる言葉" && word.category !== "ことわざ・慣用句・故事成語"));
   assert.ok(QUESTIONS.every((question) => !question.subskill.includes("敬語") && !question.subskill.includes("接続詞")));
 });
 
@@ -96,6 +100,17 @@ test("熟語の構成は6種類の関係を含み、語句ファイルに登録�
   compounds.forEach((question) => {
     assert.ok(question.vocabularyTerm);
     assert.ok(VOCABULARY_DATA.some((word) => word.term === question.vocabularyTerm && word.questionIds.includes(question.id)));
+  });
+});
+
+test("新しい語彙60問は6ジャンルに均等に追加される", () => {
+  const counts = Object.fromEntries(Object.keys(LABS).map((lab) => [lab, 0]));
+  VOCABULARY_EXPANSION_DATA.forEach(([, question]) => { counts[question.lab] += 1; });
+  assert.deepEqual(counts, { meaning:10, precise:10, feelings:10, sensory:10, learning:10, structure:10 });
+  VOCABULARY_EXPANSION_DATA.forEach(([id, question]) => {
+    assert.ok(question.vocabularyTerm, id);
+    assert.ok(question.vocabularyMeaning, id);
+    assert.ok(question.vocabularyExample, id);
   });
 });
 
