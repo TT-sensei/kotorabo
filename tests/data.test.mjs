@@ -5,6 +5,7 @@ import { SYSTEMATIC_VOCABULARY } from "../js/data/question-sets/systematic-langu
 import { COMPOUND_STRUCTURE_DATA } from "../js/data/question-sets/compound-structure.js";
 import { VOCABULARY_EXPANSION_DATA } from "../js/data/question-sets/vocabulary-expansion.js";
 import { LANGUAGE_USE_DATA } from "../js/data/question-sets/language-use.js";
+import { MUNICIPAL_VOCABULARY_DATA } from "../js/data/question-sets/municipal-vocabulary.js";
 import { LABS, SKILL_MAP } from "../js/data/skill-map.js";
 import { buildDiagnosticSession, buildFocusSession, buildSession, orderQuestionOptions } from "../js/core/engine.js";
 import { BADGES, evaluateBadgeIds } from "../js/data/badges.js";
@@ -16,8 +17,9 @@ test("学習ジャンルは語彙に特化した6ジャンル", () => {
 });
 
 test("有効な問題バンクは語彙問題だけで構成される", () => {
-  assert.equal(QUESTIONS.length, 162);
+  assert.equal(QUESTIONS.length, 198);
   assert.equal(VOCABULARY_EXPANSION_DATA.length, 60);
+  assert.equal(MUNICIPAL_VOCABULARY_DATA.length, 36);
   assert.equal(new Set(QUESTIONS.map((question) => question.id)).size, QUESTIONS.length);
   const skillIds = new Set(SKILL_MAP.map((skill) => skill.id));
   QUESTIONS.forEach((question) => {
@@ -74,7 +76,7 @@ test("学年とチャレンジレベルは分けて扱える", () => {
 });
 
 test("ことばファイルは問題で出会う語句だけを集め、問題IDと結び付く", () => {
-  assert.ok(VOCABULARY_DATA.length >= 140);
+  assert.ok(VOCABULARY_DATA.length >= 170);
   assert.equal(new Set(VOCABULARY_DATA.map((word) => word.id)).size, VOCABULARY_DATA.length);
   const ids = new Set(QUESTIONS.map((question) => question.id));
   VOCABULARY_DATA.forEach((word) => {
@@ -122,6 +124,18 @@ test("文脈で使う語彙問題は独自作成され、学びの観点が付�
   LANGUAGE_USE_DATA.forEach(([id, question]) => {
     assert.equal(question.purpose, "transfer", id);
     assert.ok(question.context && question.vocabularyTerm && question.vocabularyMeaning && question.vocabularyExample, id);
+  });
+});
+
+test("新しい教科横断語彙36問は6ジャンルに均等に追加される", () => {
+  const counts = Object.fromEntries(Object.keys(LABS).map((lab) => [lab, 0]));
+  MUNICIPAL_VOCABULARY_DATA.forEach(([, question]) => { counts[question.lab] += 1; });
+  assert.deepEqual(counts, { meaning:6, precise:6, feelings:6, sensory:6, learning:6, structure:6 });
+  MUNICIPAL_VOCABULARY_DATA.forEach(([id, question]) => {
+    assert.ok(question.vocabularyTerm, id);
+    assert.ok(question.vocabularyMeaning, id);
+    assert.ok(question.vocabularyExample, id);
+    assert.ok(question.context && question.hint && question.explanation, id);
   });
 });
 
