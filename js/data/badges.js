@@ -16,42 +16,32 @@ const processBadges = [
 ];
 
 const skillImages = [
-  "word-sprout", "word-detective", "expression", "between-the-lines", "language-explorer",
-  "word-tree", "key-point", "paraphrase", "word-weaver", "careful-writing",
-  "communication", "active-listening", "words-connect", "structure-reader", "text-evidence",
-  "deeper-reading", "revision", "self-correction", "language-rhythm",
+  "word-detective", "word-sprout", "expression", "word-tree", "key-point", "paraphrase",
 ];
 
 const skillBadges = [
-  ["words.basic_meaning","ことばの意味"], ["words.semantic_groups","ことばの仲間"],
-  ["words.precise_choice","ぴったりのことば"], ["words.feeling_character","気持ちと人がら"],
-  ["words.traditional_expressions","昔から伝わる言葉"], ["words.word_formation","ことばの組み立て"],
-  ["words.learning_terms","学習に使う言葉"], ["words.abstract_objective","説明のことば"],
-  ["sentence.core","文のほねぐみ"], ["sentence.detail_order","くわしく伝える"],
-  ["sentence.reader_design","相手に伝わる文"], ["sentence.register_keigo","場面に合う言い方"],
-  ["connection.sequence_cause","順序とわけ"], ["connection.connectives","接続詞"],
-  ["connection.logic_relations","文と文のつながり"], ["connection.logic_quality","つながりを確かめる"],
-  ["passage.order_topic","文のまとまり"], ["passage.structure","文章の組み立て"],
-  ["passage.revision_design","もっと伝わる文章"],
+  ["vocab.meaning","意味と仲間"],
+  ["vocab.precise","ぴったりのことば"],
+  ["vocab.feelings","気持ち・人がら"],
+  ["vocab.sensory","動き・様子"],
+  ["vocab.expressions","昔からの表現"],
+  ["vocab.structure","ことばの成り立ち"],
 ].map(([skillId, label], index) => ({
   id:`skill-${skillId.replaceAll(".", "-")}`,
   skillId,
   title:`${label}研究員`,
-  description:`「${label}」で、違う問題を3つ考えた。`,
+  description:`「${label}」の言葉を、違う問題でも考えた。`,
   image:japanese(skillImages[index]),
 }));
 
 const labInfo = [
-  ["words","ことば", "word-detective", "mastery"],
-  ["sentence","文づくり", "careful-writing", "great-answer"],
-  ["connection","つながり", "words-connect", "connection"],
-  ["passage","文章", "structure-reader", "problem-solver"],
+  ["meaning","意味・仲間","word-detective","mastery"],
+  ["precise","ぴったり","word-sprout","great-answer"],
+  ["feelings","気持ち","expression","connection"],
+  ["sensory","動き・様子","word-tree","problem-solver"],
+  ["expressions","昔からの表現","key-point","great-answer"],
+  ["structure","成り立ち","paraphrase","knowledge"],
 ];
-
-const labBadges = labInfo.flatMap(([lab, label, japaneseImage, commonImage]) => [
-  { id:`lab-${lab}-growing`, lab, stage:"growing", title:`${label}ラボ 成長中`, description:`${label}ラボで5つの問題に取り組んだ。`, image:japanese(japaneseImage) },
-  { id:`lab-${lab}-transfer`, lab, stage:"transfer", title:`${label}ラボ 深まり`, description:`${label}ラボで深く考え、別の場面にも挑戦した。`, image:common(commonImage) },
-]);
 
 const rankBadges = [
   [2,"ひらめき研究員","new-skill"], [4,"文づくり研究員","level-up"],
