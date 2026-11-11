@@ -24,8 +24,8 @@ const qualityCopy = {
 
 const savedProfile = loadProfile();
 const initialProfile = savedProfile
-  ? { ...savedProfile, challengeLevel:savedProfile.challengeLevel ?? savedProfile.grade ?? 3, researchXP:savedProfile.researchXP ?? 0 }
-  : { grade:3, challengeLevel:3, furigana:"grade", onboarded:false, researchXP:0, createdAt:new Date().toISOString() };
+  ? { ...savedProfile, onboarded:true, researchXP:savedProfile.researchXP ?? 0 }
+  : { furigana:"grade", onboarded:true, researchXP:0, createdAt:new Date().toISOString() };
 
 const vocabularyQuestionMap = new Map(QUESTIONS.map((question) => [question.id, question]));
 const initialAttempts = loadAttempts()
@@ -46,7 +46,7 @@ const state = {
   attempts: initialAttempts,
   badgeIds: initialBadgeIds,
   newBadges: [],
-  screen: initialProfile.onboarded ? "home" : "onboarding",
+  screen: "home",
   onboardingResult: false,
   queue: [], position:0, selectedId:null, quality:null, tryNumber:1,
   usedHint:false, showHint:false, showWhy:false, sessionAttempts:[], sessionComplete:false,
@@ -88,7 +88,7 @@ function researchStatusTemplate(compact = false) {
 function header() {
   return `<header class="site-header">
     <button class="brand" data-action="home" aria-label="ホームへ戻る"><span class="brand-mark small">こ</span><span><strong>ことラボ</strong><small>言葉を知り、使いこなそう！</small></span></button>
-    <nav aria-label="メインメニュー"><button data-action="home" class="${state.screen === "home" ? "active" : ""}">今日のチャレンジ</button><button data-action="focus" class="${state.screen === "focus" ? "active" : ""}">特訓する</button><button data-action="carte" class="${state.screen === "carte" ? "active" : ""}">できたこと</button><button data-action="settings" class="${state.screen === "settings" ? "active" : ""}">せってい</button>${researchStatusTemplate(true)}<span class="grade-chip">${state.profile.grade}年生・問題Lv.${state.profile.challengeLevel}</span></nav>
+    <nav aria-label="メインメニュー"><button data-action="home" class="${state.screen === "home" ? "active" : ""}">今日のチャレンジ</button><button data-action="focus" class="${state.screen === "focus" ? "active" : ""}">特訓する</button><button data-action="carte" class="${state.screen === "carte" ? "active" : ""}">できたこと</button><button data-action="settings" class="${state.screen === "settings" ? "active" : ""}">せってい</button>${researchStatusTemplate(true)}</nav>
   </header>`;
 }
 
@@ -121,24 +121,43 @@ function homeTemplate() {
   const p = progress();
   const reviewCount = p.filter((item) => item.needsReview).length;
   const latestBadge = [...state.badgeIds].reverse().map(getBadge).find(Boolean);
-  return `<main class="home-page"><section class="research-hero"><div><p class="eyebrow light"><i></i> きょうのきみにぴったり</p><h1>今日のことばチャレンジ</h1><p>${reviewCount ? "前に迷った言葉を、ちがう問題でもう一度確かめよう！" : "言葉の意味を知り、比べて、使える言葉を増やそう！"}</p></div><div class="hero-research-status">${researchStatusTemplate()}</div>${naviImage(NAVI.groupStudying, "", "hero-navi")}</section>
-    <section class="session-picker"><div class="section-heading"><div><p>コースをえらぼう</p><h2>今日は何問チャレンジする？</h2></div><span>途中で休んでもだいじょうぶ</span></div><div class="session-grid">
-      <button data-size="3"><span class="session-icon bolt">⚡</span><div><small>サクッと</small><strong>3問</strong><p>まずは気軽にやってみよう</p></div><b>→</b></button>
-      <button data-size="5" class="recommended"><em>おすすめ</em><span class="session-icon scope">🔬</span><div><small>いいとこどり</small><strong>5問</strong><p>復習＋新しい言葉</p></div><b>→</b></button>
-      <button data-size="10"><span class="session-icon flame">🔥</span><div><small>ぐんぐん</small><strong>10問</strong><p>言葉の幅をたっぷり広げよう</p></div><b>→</b></button>
-    </div></section>
-    <section class="quick-actions" aria-label="えらべるチャレンジ"><button class="quick-action-card focus-action" data-action="focus"><span>🎯</span><div><small>覚えたいジャンルを選ぶ</small><strong>テーマ別に特訓する</strong><p>気になる言葉を選んで、じっくり取り組もう。</p></div><b>→</b></button><button class="quick-action-card vocabulary-action" data-action="vocabulary"><span>あ</span><div><small>出会った言葉をためる</small><strong>ことばファイル</strong><p>意味や使い分けを、自分の記録で確かめよう。</p></div><b>→</b></button><button class="quick-action-card badge-action" data-action="badges"><span>🏅</span><div><small>${state.badgeIds.length} / ${BADGES.length}</small><strong>達成バッジ</strong><p>挑戦や考え直しも、ちゃんと記録しているよ。</p></div><b>→</b></button><button class="quick-action-card settings-action" data-action="settings"><span>⚙️</span><div><small>むずかしさを変える</small><strong>レベルをえらぶ</strong><p>むずかしい・かんたんに合わせていつでも変更。</p></div><b>→</b></button></section>
-    <section class="lab-overview"><div class="section-heading"><div><p>6つのジャンル</p><h2>今日はどの言葉を増やす？</h2></div><button class="text-button" data-action="carte">✨ できたことを見る →</button></div><div class="theme-grid">${labKeys.map((lab) => { const info = labReadiness(p, lab); return '<button class="theme-card ' + LABS[lab].color + '" data-focus-lab="' + lab + '"><span class="theme-card-icon">' + LABS[lab].icon + '</span><span class="theme-card-copy"><strong>' + LABS[lab].label + '</strong><small>' + LABS[lab].question + '</small><i><b style="width:' + Math.max(4, info.value) + '%"></b></i><em>' + info.label + '</em></span><b class="theme-arrow">→</b></button>'; }).join("")}</div>${latestBadge ? `<button class="latest-badge" data-action="badges"><img src="${latestBadge.image}" alt="" loading="lazy" onerror="this.hidden=true"><span><small>さいきんの達成</small><strong>${latestBadge.title}</strong></span><b>バッジを見る →</b></button>` : ""}<p class="history-note">👏 これまでに ${state.attempts.length}回、言葉をじっくり考えたよ！</p></section></main>`;
+  const foundWords = vocabularyProgress().filter((word) => word.stage > 0).length;
+  return `<main class="home-page home-redesign">
+    <section class="research-hero home-hero-simple">
+      <div class="home-hero-copy">
+        <p class="eyebrow light"><i></i> ことばの研究室</p>
+        <h1>ことばを知る。<br>使えることばを増やす。</h1>
+        <p>意味を知り、似た言葉と比べ、ぴったりの言葉を見つけよう。</p>
+        <button class="primary-button home-start-button" data-size="5">今日のことばに挑戦 <span>→</span></button>
+        <small class="home-start-note">${reviewCount ? `前に迷った言葉も、ちがう問題で確かめよう（${reviewCount}項目）` : "今の理解に合わせて、問題のむずかしさが少しずつ変わるよ。"}</small>
+      </div>
+      <div class="home-hero-side">${researchStatusTemplate()} ${naviImage(NAVI.groupStudying, "ことばの研究を応援する仲間たち", "hero-navi")}</div>
+    </section>
+    <section class="home-discover">
+      <div class="section-heading"><div><p>ことばの探検</p><h2>気になるところから見てみよう</h2></div><span>どこから始めてもOK</span></div>
+      <div class="theme-grid home-theme-grid">${labKeys.map((lab) => {
+        const info = labReadiness(p, lab);
+        return `<button class="theme-card ${LABS[lab].color}" data-focus-lab="${lab}">
+          <span class="theme-card-icon">${LABS[lab].icon}</span>
+          <span class="theme-card-copy"><strong>${LABS[lab].short}</strong><small>${LABS[lab].question}</small><em>${info.label}</em></span>
+          <b class="theme-arrow">→</b>
+        </button>`;
+      }).join("")}</div>
+    </section>
+    <section class="home-library-row">
+      <button class="home-library-card" data-action="vocabulary"><span class="home-library-icon">あ</span><span><small>出会った言葉を集める</small><strong>ことばファイル</strong><em>${foundWords}語</em></span><b>→</b></button>
+      <button class="home-library-card" data-action="carte"><span class="home-library-icon">↗</span><span><small>学びの足あと</small><strong>できたこと</strong><em>${state.attempts.length}回チャレンジ</em></span><b>→</b></button>
+      <button class="home-library-card" data-action="badges"><span class="home-library-icon">✦</span><span><small>積み重ねの記録</small><strong>達成バッジ</strong><em>${state.badgeIds.length} / ${BADGES.length}</em></span><b>→</b></button>
+    </section>
+    ${latestBadge ? `<button class="latest-badge" data-action="badges"><img src="${latestBadge.image}" alt="" loading="lazy" onerror="this.hidden=true"><span><small>さいきんの達成</small><strong>${latestBadge.title}</strong></span><b>バッジを見る →</b></button>` : ""}
+  </main>`;
 }
-
 function settingsTemplate() {
-  return `<main class="settings-page"><section class="page-intro"><p class="eyebrow">⚙️ いつでも変えてOK！</p><h1>じぶんに合うレベルにしよう</h1><p>「ちょっとむずかしい」「もっとできそう」と思ったら、ここで変えよう。これまでのできたことは消えないよ。</p></section>
-    <section class="settings-card"><div class="settings-heading"><span>🏫</span><div><h2>学校では何年生？</h2><p>学校の学年として記録するよ。問題のむずかしさとは別にしてあるよ。</p></div></div><div class="level-grid school-grade-grid">${[1,2,3,4,5,6].map((grade) => `<button data-school-grade="${grade}" class="${state.profile.grade === grade ? "selected" : ""}"><strong>${grade}</strong><span>年生</span></button>`).join("")}</div></section>
-    <section class="settings-card challenge-card"><div class="settings-heading"><span>🚀</span><div><h2>問題のレベル</h2><p>むずかしければ下げて、かんたんなら上げてみよう。何度でも変えられるよ。</p></div></div><div class="level-grid challenge-level-grid">${[1,2,3,4,5,6].map((level) => `<button data-level="${level}" class="${state.profile.challengeLevel === level ? "selected" : ""}"><strong>Lv.${level}</strong><span>${LEVEL_WORLDS[level]}</span></button>`).join("")}</div><div class="level-summary"><span>いまの組み合わせ</span><strong>${state.profile.grade}年生 ／ チャレンジ Lv.${state.profile.challengeLevel}</strong><p>${state.profile.challengeLevel < state.profile.grade ? "少しやさしいところから、じっくり力をためよう！" : state.profile.challengeLevel > state.profile.grade ? "学年をこえて、ひと足先にチャレンジ中！" : "学年に近いレベルでチャレンジ中！"}</p></div></section>
-    <section class="settings-card"><div class="settings-heading"><span>🔤</span><div><h2>文字の読みやすさ</h2><p>読みやすいほうをえらんでね。</p></div></div><div class="choice-row wide"><button data-furigana="grade" class="${state.profile.furigana === "grade" ? "selected" : ""}">学年に合わせる</button><button data-furigana="more" class="${state.profile.furigana === "more" ? "selected" : ""}">ひらがな多め</button></div></section>
-    <div class="page-actions"><button class="primary-button" data-action="home">この設定ではじめる <span>→</span></button></div></main>`;
+  return `<main class="settings-page"><section class="page-intro"><p class="eyebrow">⚙️ ことラボの設定</p><h1>読みやすさを整える</h1><p>学年や問題レベルを選ぶ必要はありません。答え方に合わせて、問題の難しさが自動で変わります。</p></section>
+    <section class="settings-card"><div class="settings-heading"><span>🔤</span><div><h2>文字の読みやすさ</h2><p>読みやすいほうをえらんでね。</p></div></div><div class="choice-row wide"><button data-furigana="grade" class="${state.profile.furigana === "grade" ? "selected" : ""}">漢字をそのまま表示</button><button data-furigana="more" class="${state.profile.furigana === "more" ? "selected" : ""}">ひらがな多め</button></div></section>
+    <section class="settings-card"><div class="settings-heading"><span>↗</span><div><h2>問題のむずかしさ</h2><p>正解が続くと少しずつ難しくなり、迷ったときは前の段階に戻って確かめます。</p></div></div><p class="adaptive-note">一人ひとりの学習履歴に合わせて調整します。学年の登録やレベル変更はありません。</p></section>
+    <div class="page-actions"><button class="primary-button" data-action="home">ホームへ戻る <span>→</span></button></div></main>`;
 }
-
 function focusTemplate() {
   const skillProgress = new Map(progress().map((item) => [item.skill, item]));
   const skills = SKILL_MAP.filter((skill) => skill.lab === state.focusLab);
@@ -287,14 +306,11 @@ function carteTemplate() {
     next: p.filter((item) => item.needsReview || item.stableDepth < 2),
   };
   const section = (title, icon, items, empty) => `<section class="carte-section"><h2><span>${icon}</span>${title}</h2>${items.length ? `<div class="skill-list">${items.map((item) => { const skill = getSkill(item.skill); return `<article><div><span class="${LABS[item.lab].color}">${LABS[item.lab].icon}</span><div><strong>${skill?.label}</strong><small>${item.stableDepth >= 5 ? "ちがうお話でもできたよ！" : `${DEPTH_LABELS[Math.max(1,item.stableDepth)]}にチャレンジ中`}</small></div></div><b>${item.needsReview ? "もう一回" : "のびてる！"}</b></article>`; }).join("")}</div>` : `<p class="empty-state">${empty}</p>`}</section>`;
-  return `<main class="carte-page"><section class="carte-hero"><div><p class="eyebrow">きみのがんばり</p><h1>できたこと</h1><p>ことばを考えた分だけ、できることがふえていくよ。</p></div><div class="carte-research">${researchStatusTemplate()}</div><div class="carte-stamp"><strong>${state.attempts.length}</strong><span>考えた回数</span><small>小学${state.profile.grade}年</small></div></section><div class="carte-shortcuts"><button data-action="vocabulary"><span>あ</span><div><strong>ことばファイル</strong><small>${vocabularyProgress().filter((word) => word.stage > 0).length}語に出会った</small></div><b>→</b></button><button data-action="badges"><span>🏅</span><div><strong>達成バッジ</strong><small>${state.badgeIds.length} / ${BADGES.length}個</small></div><b>→</b></button></div><div class="carte-columns">${section("できるようになった！","✦",groups.strong,"チャレンジすると、ここにできたことが集まるよ！")} ${section("ぐんぐん成長中","↗",groups.growing,"これから、できることがふえていくよ。")} ${section("つぎにチャレンジ","◎",groups.next,"迷った問題は、またちがうお話で出てくるよ。")}</div><section class="teacher-note"><div><h2>ちゃんと見ているよ</h2><p>正解だけでなく、ヒントを見たことや、考え直してできたことも大切にしています。</p></div><button data-action="home">今日のチャレンジへ →</button></section><details class="data-settings"><summary>せってい</summary><p>この端末に、これまでのがんばりを保存しています。</p><button data-action="reset">${state.resetConfirm ? "本当に最初からやり直す" : "最初からやり直す"}</button></details></main>`;
+  return `<main class="carte-page"><section class="carte-hero"><div><p class="eyebrow">きみのがんばり</p><h1>できたこと</h1><p>ことばを考えた分だけ、できることがふえていくよ。</p></div><div class="carte-research">${researchStatusTemplate()}</div><div class="carte-stamp"><strong>${state.attempts.length}</strong><span>考えた回数</span><small>ことばの研究記録</small></div></section><div class="carte-shortcuts"><button data-action="vocabulary"><span>あ</span><div><strong>ことばファイル</strong><small>${vocabularyProgress().filter((word) => word.stage > 0).length}語に出会った</small></div><b>→</b></button><button data-action="badges"><span>🏅</span><div><strong>達成バッジ</strong><small>${state.badgeIds.length} / ${BADGES.length}個</small></div><b>→</b></button></div><div class="carte-columns">${section("できるようになった！","✦",groups.strong,"チャレンジすると、ここにできたことが集まるよ！")} ${section("ぐんぐん成長中","↗",groups.growing,"これから、できることがふえていくよ。")} ${section("つぎにチャレンジ","◎",groups.next,"迷った問題は、またちがうお話で出てくるよ。")}</div><section class="teacher-note"><div><h2>ちゃんと見ているよ</h2><p>正解だけでなく、ヒントを見たことや、考え直してできたことも大切にしています。</p></div><button data-action="home">今日のチャレンジへ →</button></section><details class="data-settings"><summary>せってい</summary><p>この端末に、これまでのがんばりを保存しています。</p><button data-action="reset">${state.resetConfirm ? "本当に最初からやり直す" : "最初からやり直す"}</button></details></main>`;
 }
 
 app.addEventListener("click", (event) => {
   const button = event.target.closest("button"); if (!button) return;
-  if (button.dataset.grade) { state.profile.grade = Number(button.dataset.grade); state.profile.challengeLevel = Number(button.dataset.grade); saveProfile(state.profile); return render(); }
-  if (button.dataset.schoolGrade) { state.profile.grade = Number(button.dataset.schoolGrade); saveProfile(state.profile); return render(); }
-  if (button.dataset.level) { state.profile.challengeLevel = Number(button.dataset.level); saveProfile(state.profile); return render(); }
   if (button.dataset.furigana) { state.profile.furigana = button.dataset.furigana; saveProfile(state.profile); return render(); }
   if (button.dataset.focusLab) {
     state.focusLab = button.dataset.focusLab;
@@ -330,7 +346,7 @@ app.addEventListener("click", (event) => {
   }
   if (action === "reset") {
     if (!state.resetConfirm) { state.resetConfirm = true; return render(); }
-    resetLearningData(); Object.assign(state, { profile:{ grade:3, challengeLevel:3, furigana:"grade", onboarded:false, researchXP:0, createdAt:new Date().toISOString() }, attempts:[], badgeIds:[], newBadges:[], screen:"onboarding", onboardingResult:false, resetConfirm:false, focusLab:"meaning", focusSkill:"vocab.meaning", focusSize:5 }); return render();
+    resetLearningData(); Object.assign(state, { profile:{ furigana:"grade", onboarded:true, researchXP:0, createdAt:new Date().toISOString() }, attempts:[], badgeIds:[], newBadges:[], screen:"home", onboardingResult:false, resetConfirm:false, focusLab:"meaning", focusSkill:"vocab.meaning", focusSize:5 }); return render();
   }
 });
 
