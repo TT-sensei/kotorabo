@@ -64,6 +64,10 @@
 
 参考資料：
 - [WEB版 小学校教科書語彙リスト](https://shogakugoi.chuta.jp/)（研究グループ公開）
+- [徳島県教育委員会・総合教育センター「小学校国語」](https://siryou.tokushima-ec.ed.jp/Elementary%20school%20Japanese%20language)（活用問題、話合い、言語知識の練習問題など）
+- [滋賀県総合教育センター「児童が語彙を豊かにし、自分の考えを形成する小学校国語科の授業づくり」](https://www.spec.shiga-ec.ed.jp/0000000103.html)（語句に着目して考えを形成する授業研究）
+- [長崎県教育委員会「学習プリント集」](https://www.news.ed.jp/gimu/yumeako/syoko.html)（学年別の国語問題・学習プリント）
+- [岐阜県教育委員会「にほんごワークブック」](https://www.gifu-net.ed.jp/kyoka/eigo/nihongo/gakkouseikatsu.pdf)（教科学習で出会う初期頻出語彙の選定例）
 - [大阪府 小学校国語ワークブック](https://www.pref.osaka.lg.jp/o180080/shochugakko/shidou/workbookshougakkouko.html)
 - [兵庫県教育委員会「ことばの力」](https://www2.hyogo-c.ed.jp/hpe/gimu/powerofwords/)（洲本市立安乎小学校の実践では、描写・要約・紹介・対話・説明・記録・報告・討論など、表現の目的別に使いたい言葉を整理）
 - [福島県「子どもの語彙を豊かにする取組」](https://kasenweb.pref.fukushima.jp/sec/70056a/yutakanagoi.html)
