@@ -11,8 +11,9 @@ const TYPES = [
 ];
 
 const item = (id, level, subskill, term, meaning, example, answerIndex) => {
-  const options = TYPES.map((label, index) => [
-    label,
+  const optionIndices = [answerIndex, ...[1, 2, 3].map((offset) => (answerIndex + offset) % TYPES.length)];
+  const options = optionIndices.map((index) => [
+    TYPES[index],
     index === answerIndex ? "best" : "incorrect",
     index === answerIndex ? meaning : "二つの漢字を訓読みにして、意味の関係を考え直そう。",
   ]);
