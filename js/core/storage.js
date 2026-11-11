@@ -1,6 +1,7 @@
 const PROFILE_KEY = "kotorabo.profile.v1";
 const ATTEMPTS_KEY = "kotorabo.attempts.v1";
 const BADGES_KEY = "kotorabo.badges.v1";
+const NOTEBOOK_KEY = "kotorabo.notebook.v1";
 
 function read(key, fallback) {
   try {
@@ -23,8 +24,14 @@ export const loadBadges = () => {
   return Array.isArray(value) ? value.filter((id) => typeof id === "string") : [];
 };
 export const saveBadges = (badgeIds) => localStorage.setItem(BADGES_KEY, JSON.stringify([...new Set(badgeIds)]));
+export const loadNotebook = () => {
+  const value = read(NOTEBOOK_KEY, {});
+  return value && typeof value === "object" && !Array.isArray(value) ? value : {};
+};
+export const saveNotebook = (notes) => localStorage.setItem(NOTEBOOK_KEY, JSON.stringify(notes || {}));
 export function resetLearningData() {
   localStorage.removeItem(PROFILE_KEY);
   localStorage.removeItem(ATTEMPTS_KEY);
   localStorage.removeItem(BADGES_KEY);
+  localStorage.removeItem(NOTEBOOK_KEY);
 }
