@@ -83,6 +83,18 @@ test("チャレンジのstretchは可能な場合に適応レベルより一段�
   assert.ok(question.contentLevel > target, `${question.id}: stretch should exceed ${target}`);
 });
 
+test("初期レベルの問題が5問未満のジャンルでも特訓を5問編成できる", () => {
+  const limitedSkills = SKILL_MAP.filter((skill) => {
+    const levels = QUESTIONS.filter((question) => question.skill === skill.id).map((question) => question.contentLevel);
+    const minimum = Math.min(...levels);
+    return levels.filter((level) => level === minimum).length < 5;
+  });
+  assert.ok(limitedSkills.length > 0, "少数の初期レベルを持つジャンルを検出");
+  for (const skill of limitedSkills) {
+    assert.equal(buildFocusSession(QUESTIONS, {}, [], skill.id, 5).length, 5, skill.id);
+  }
+});
+
 test("6ジャンルすべてで3問・5問の特訓を必ず編成できる", () => {
   for (const skill of SKILL_MAP) {
     for (const size of [3, 5]) {
