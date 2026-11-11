@@ -44,5 +44,7 @@ export const question = (lab, prefix) => (
     ...(meta.vocabularyTerm ? { vocabularyTerm: meta.vocabularyTerm } : {}),
     ...(meta.vocabularyMeaning ? { vocabularyMeaning: meta.vocabularyMeaning } : {}),
     ...(meta.vocabularyExample ? { vocabularyExample: meta.vocabularyExample } : {}),
+    ...(meta.learningLens ? { learningLens: meta.learningLens } : {}),
+    ...(meta.useStage ? { useStage: meta.useStage } : {}),
   },
 ];
