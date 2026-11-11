@@ -4,6 +4,7 @@ import { QUESTIONS, DIAGNOSTIC_IDS, VOCABULARY_DATA } from "../js/data/questions
 import { SYSTEMATIC_VOCABULARY } from "../js/data/question-sets/systematic-language.js";
 import { COMPOUND_STRUCTURE_DATA } from "../js/data/question-sets/compound-structure.js";
 import { VOCABULARY_EXPANSION_DATA } from "../js/data/question-sets/vocabulary-expansion.js";
+import { LANGUAGE_USE_DATA } from "../js/data/question-sets/language-use.js";
 import { LABS, SKILL_MAP } from "../js/data/skill-map.js";
 import { buildDiagnosticSession, buildFocusSession, buildSession, orderQuestionOptions } from "../js/core/engine.js";
 import { BADGES, evaluateBadgeIds } from "../js/data/badges.js";
@@ -15,7 +16,7 @@ test("学習ジャンルは語彙に特化した6ジャンル", () => {
 });
 
 test("有効な問題バンクは語彙問題だけで構成される", () => {
-  assert.equal(QUESTIONS.length, 150);
+  assert.equal(QUESTIONS.length, 162);
   assert.equal(VOCABULARY_EXPANSION_DATA.length, 60);
   assert.equal(new Set(QUESTIONS.map((question) => question.id)).size, QUESTIONS.length);
   const skillIds = new Set(SKILL_MAP.map((skill) => skill.id));
@@ -114,7 +115,7 @@ test("新しい語彙60問は6ジャンルに均等に追加される", () => {
   });
 });
 
-test("選択肢の並び替えは再現可能", () => {
+test("文脈で使う語彙問題は独自作成され、学びの観点が付いている", () => {\n  assert.equal(LANGUAGE_USE_DATA.length, 12);\n  const lenses = new Set(LANGUAGE_USE_DATA.map(([, question]) => question.learningLens));\n  assert.deepEqual(lenses, new Set(["treasure", "dialogue", "academic", "structure"]));\n  LANGUAGE_USE_DATA.forEach(([id, question]) => {\n    assert.equal(question.purpose, "transfer", id);\n    assert.ok(question.context && question.vocabularyTerm && question.vocabularyMeaning && question.vocabularyExample, id);\n  });\n});\n\ntest("選択肢の並び替えは再現可能", () => {
   const sample = QUESTIONS[0];
   assert.deepEqual(orderQuestionOptions(sample), orderQuestionOptions(sample));
 });
