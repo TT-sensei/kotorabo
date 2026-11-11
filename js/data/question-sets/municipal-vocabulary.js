@@ -173,6 +173,5 @@ export const MUNICIPAL_VOCABULARY_DATA = records.map((record) => {
     vocabularyTerm: term,
     vocabularyMeaning,
     vocabularyExample,
-    gradeMin: level,
   });
 });
