@@ -265,7 +265,7 @@ function vocabularyTemplate() {
 
 function badgeGroup(badge) {
   if (badge.id.startsWith("process-")) return "学び方";
-  if (badge.id.startsWith("skill-")) return "SKILL";
+  if (badge.id.startsWith("skill-")) return "6つのジャンル";
   if (badge.id.startsWith("lab-")) return "6つのジャンル";
   return "研究者ランク";
 }
@@ -328,7 +328,7 @@ app.addEventListener("click", (event) => {
   }
   if (action === "reset") {
     if (!state.resetConfirm) { state.resetConfirm = true; return render(); }
-    resetLearningData(); Object.assign(state, { profile:{ grade:3, challengeLevel:3, furigana:"grade", onboarded:false, researchXP:0, createdAt:new Date().toISOString() }, attempts:[], badgeIds:[], newBadges:[], screen:"onboarding", onboardingResult:false, resetConfirm:false, focusLab:"words", focusSkill:null, focusSize:5 }); return render();
+    resetLearningData(); Object.assign(state, { profile:{ grade:3, challengeLevel:3, furigana:"grade", onboarded:false, researchXP:0, createdAt:new Date().toISOString() }, attempts:[], badgeIds:[], newBadges:[], screen:"onboarding", onboardingResult:false, resetConfirm:false, focusLab:"meaning", focusSkill:"vocab.meaning", focusSize:5 }); return render();
   }
 });
 
