@@ -61,15 +61,17 @@ const labKeys = Object.keys(LABS);
 const progress = () => buildProgress(state.attempts);
 
 const hiraganaReplacements = [
-  ["客観的", "じじつにもとづいて"], ["具体例", "ぐたいてきな れい"], ["接続詞", "せつぞくし"], ["運動場", "うんどうじょう"],
-  ["図書室", "としょしつ"], ["主語", "しゅご"], ["述語", "じゅつご"], ["観察", "かんさつ"],
-  ["調査", "ちょうさ"], ["提案", "ていあん"], ["説明", "せつめい"], ["文章", "ぶんしょう"],
-  ["原因", "げんいん"], ["結果", "けっか"], ["理由", "りゆう"], ["順番", "じゅんばん"],
-  ["範囲", "はんい"], ["関係", "かんけい"], ["目的", "もくてき"], ["相手", "あいて"],
-  ["学習", "がくしゅう"], ["学校", "がっこう"], ["言葉", "ことば"], ["気持ち", "きもち"],
-  ["一番", "いちばん"], ["考え", "かんがえ"], ["伝わ", "つたわ"], ["詳しく", "くわしく"],
-  ["例えば", "たとえば"], ["最も", "もっとも"], ["選ぶ", "えらぶ"], ["選ん", "えらん"],
-  ["選び", "えらび"], ["読書", "どくしょ"], ["読む", "よむ"], ["読ん", "よん"],
+  ["類義語", "るいぎご"], ["対義語", "たいぎご"], ["慣用句", "かんようく"], ["故事成語", "こじせいご"],
+  ["接頭語", "せっとうご"], ["接尾語", "せつびご"], ["熟語", "じゅくご"], ["構成", "こうせい"],
+  ["客観的", "じじつにもとづいて"], ["具体例", "ぐたいてきな れい"], ["抽象語", "ちゅうしょうご"], ["温暖", "おんだん"],
+  ["岩石", "がんせき"], ["不可能", "ふかのう"], ["未完成", "みかんせい"], ["運動場", "うんどうじょう"],
+  ["図書室", "としょしつ"], ["観察", "かんさつ"], ["調査", "ちょうさ"], ["提案", "ていあん"],
+  ["説明", "せつめい"], ["原因", "げんいん"], ["結果", "けっか"], ["理由", "りゆう"],
+  ["順番", "じゅんばん"], ["範囲", "はんい"], ["関係", "かんけい"], ["目的", "もくてき"],
+  ["相手", "あいて"], ["学習", "がくしゅう"], ["学校", "がっこう"], ["言葉", "ことば"],
+  ["気持ち", "きもち"], ["一番", "いちばん"], ["考え", "かんがえ"], ["伝わ", "つたわ"],
+  ["詳しく", "くわしく"], ["例えば", "たとえば"], ["最も", "もっとも"], ["選ぶ", "えらぶ"],
+  ["選ん", "えらん"], ["選び", "えらび"], ["読書", "どくしょ"], ["読む", "よむ"], ["読ん", "よん"],
   ["書く", "かく"], ["書い", "かい"],
 ];
 
@@ -247,7 +249,7 @@ function vocabularyProgress() {
       const question = questionMap.get(attempt.questionId);
       return attempt.quality === "best" && question?.purpose === "transfer";
     });
-    const repeatedSuccess = attempts.filter((attempt) => attempt.quality === "best" && !attempt.usedHint).length >= 2;
+    const repeatedSuccess = new Set(attempts.filter((attempt) => attempt.quality === "best" && !attempt.usedHint).map((attempt) => attempt.questionId)).size >= 2;
     if (transferred || repeatedSuccess) stage = 4;
     return { ...word, stage };
   });
@@ -274,7 +276,7 @@ function badgesTemplate() {
   const categories = ["すべて", "学び方", "ジャンル", "研究者ランク"];
   const shown = BADGES.filter((badge) => state.badgeCategory === "すべて" || badgeGroup(badge) === (state.badgeCategory === "ジャンル" ? "6つのジャンル" : state.badgeCategory));
   const awarded = new Set(state.badgeIds);
-  return `<main class="collection-page badge-page"><section class="collection-hero badge-hero"><div><p class="eyebrow">正解だけじゃない達成</p><h1>達成バッジ</h1><p>挑戦、考え直し、継続、SKILLの成長を記録しています。</p></div><div class="collection-count"><strong>${state.badgeIds.length}</strong><span>獲得したバッジ</span><small>全 ${BADGES.length}個</small></div></section><div class="filter-row" aria-label="バッジの分類">${categories.map((category) => `<button data-badge-category="${category}" class="${state.badgeCategory === category ? "selected" : ""}">${category}</button>`).join("")}</div><section class="badge-grid">${shown.map((badge) => { const has = awarded.has(badge.id); return `<article class="badge-card ${has ? "earned" : "locked"}"><img src="${badge.image}" alt="" loading="lazy" decoding="async" onerror="this.hidden=true"><div><span>${badgeGroup(badge)}</span><h2>${has ? badge.title : "これからの達成"}</h2><p>${has ? badge.description : "学習を続けると、ここに新しいバッジが現れます。"}</p></div>${has ? `<b>獲得！</b>` : `<b>？</b>`}</article>`; }).join("")}</section><div class="collection-actions"><button class="secondary-button" data-action="carte">できたことへ</button><button class="primary-button" data-action="home">ホームへ →</button></div></main>`;
+  return `<main class="collection-page badge-page"><section class="collection-hero badge-hero"><div><p class="eyebrow">正解だけじゃない達成</p><h1>達成バッジ</h1><p>挑戦、考え直し、継続、6ジャンルの成長を記録しています。</p></div><div class="collection-count"><strong>${state.badgeIds.length}</strong><span>獲得したバッジ</span><small>全 ${BADGES.length}個</small></div></section><div class="filter-row" aria-label="バッジの分類">${categories.map((category) => `<button data-badge-category="${category}" class="${state.badgeCategory === category ? "selected" : ""}">${category}</button>`).join("")}</div><section class="badge-grid">${shown.map((badge) => { const has = awarded.has(badge.id); return `<article class="badge-card ${has ? "earned" : "locked"}"><img src="${badge.image}" alt="" loading="lazy" decoding="async" onerror="this.hidden=true"><div><span>${badgeGroup(badge)}</span><h2>${has ? badge.title : "これからの達成"}</h2><p>${has ? badge.description : "学習を続けると、ここに新しいバッジが現れます。"}</p></div>${has ? `<b>獲得！</b>` : `<b>？</b>`}</article>`; }).join("")}</section><div class="collection-actions"><button class="secondary-button" data-action="carte">できたことへ</button><button class="primary-button" data-action="home">ホームへ →</button></div></main>`;
 }
 
 function carteTemplate() {
