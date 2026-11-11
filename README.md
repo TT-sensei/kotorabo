@@ -51,7 +51,7 @@
 - 学年段階を意識した語彙：48問
 - 熟語の構成：12問
 - 追加語彙セット：60問\n- 文脈の中で語彙を使う練習：12問
-- ことばファイルの登録語句：147語句（同じ語句は一つにまとめて記録）
+- ことばファイルの登録語句：問題で出会った語句を自動集約（重複は一つに整理）
 
 問題で扱う語句・意味・用例・フィードバックは独自に作成しています。学習領域や発達段階を検討する際に公開資料を参考にすることはありますが、市販教材の語句一覧・配列・例文・解説を転記しません。公開資料は語彙を捉える観点の参考にとどめ、問題・場面・選択肢・解説は独自に作成します。
 
@@ -64,7 +64,7 @@
 | 基本の語彙問題 | `js/data/question-sets/words.js` |
 | 学年段階を意識した独自語彙 | `js/data/question-sets/systematic-language.js` |
 | 熟語の構成の問題 | `js/data/question-sets/compound-structure.js` |
-| 追加語彙60問 | `js/data/question-sets/vocabulary-expansion.js` |
+| 追加語彙60問 | `js/data/data/question-sets/vocabulary-expansion.js` |
 | 問題データ共通処理 | `js/data/question-sets/helpers.js` |
 | 達成バッジ | `js/data/badges.js` |
 | ナビキャラクター | `js/data/navi.js` |
