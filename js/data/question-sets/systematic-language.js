@@ -118,7 +118,6 @@ export const SYSTEMATIC_LANGUAGE_DATA = entries.filter((entry) => entry.skill !=
     curriculumTags: [entry.level <= 2 ? "1-2年" : entry.level <= 4 ? "3-4年" : "5-6年", CATEGORY_BY_SKILL[entry.skill]],
     vocabularyIds: [`sys-vocab-${entry.id}`],
     theme: entry.theme,
-    gradeMin: entry.level,
     context: entry.context,
     prompt: entry.prompt,
     options: buildOptions(entry),
