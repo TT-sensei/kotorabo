@@ -108,3 +108,9 @@ body{font-size:18px}
 .lab-mini.rose,.lab-mini.teal,.lab-token.rose,.lab-token.teal{background:var(--theme-soft);color:var(--theme)}
 @media(max-width:900px){.theme-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:560px){.theme-grid{grid-template-columns:1fr}.theme-card{padding:13px}.theme-card-icon{flex-basis:40px;width:40px;height:40px}}
+
+/* 追加した6ジャンルの色を、ホーム・診断・特訓・進捗で統一する */
+.rose b,.rose.lab-token,.lab-card.rose>div>span,.diagnosis-item.rose>span,.skill-list .rose{background:var(--rose)}
+.teal b,.teal.lab-token,.lab-card.teal>div>span,.diagnosis-item.teal>span,.skill-list .teal{background:var(--teal)}
+.lab-card.rose{color:var(--rose);border-top-color:var(--rose)}
+.lab-card.teal{color:var(--teal);border-top-color:var(--teal)}
