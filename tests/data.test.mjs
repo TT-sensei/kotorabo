@@ -33,6 +33,7 @@ test("有効な問題バンクは語彙問題だけで構成される", () => {
     assert.ok(question.contentLevel >= 1 && question.contentLevel <= 6, `${question.id}: level`);
     assert.ok(question.depth >= 1 && question.depth <= 6, `${question.id}: depth`);
   });
+  assert.ok(QUESTIONS.every((question) => !Object.hasOwn(question, "gradeMin")));
   assert.ok(QUESTIONS.every((question) => !question.skill.startsWith("sentence.") && !question.skill.startsWith("connection.") && !question.skill.startsWith("passage.")));
   assert.ok(QUESTIONS.every((question) => question.lab !== "expressions"));
 });
@@ -128,7 +129,7 @@ test("初回のチャレンジは各ジャンルの入門段階から出題す�
 });
 
 test("ことばファイルは問題で出会う語句だけを集め、問題IDと結び付く", () => {
-  assert.ok(VOCABULARY_DATA.length >= 170);
+  assert.equal(VOCABULARY_DATA.length, 239);
   assert.ok(VOCABULARY_DATA.every((word) => word.contentLevel >= 1 && word.contentLevel <= 6));
   assert.ok(VOCABULARY_DATA.every((word) => word.levelLabel === `内容L${word.contentLevel}`));
   assert.ok(VOCABULARY_DATA.every((word) => !Object.hasOwn(word, "gradeBand") && !Object.hasOwn(word, "gradeMin")));
@@ -218,6 +219,7 @@ test("正解の表示位置は4か所に偏りなく分散する", () => {
 });
 
 test("達成バッジは6ジャンルに対応し、学習過程も評価する", () => {
+  assert.equal(BADGES.length, 14);
   assert.equal(new Set(BADGES.map((badge) => badge.id)).size, BADGES.length);
   assert.equal(BADGES.filter((badge) => badge.id.startsWith("skill-")).length, 6);
   const sampleQuestion = QUESTIONS.find((question) => question.purpose === "transfer");
