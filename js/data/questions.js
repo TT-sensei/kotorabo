@@ -63,7 +63,7 @@ export const DIAGNOSTIC_IDS = [
   "kb2-w-l3-01",
   "kb2-w-l1-01",
   "kb2-w-l1-02",
-  "sys-learning-01",
+  "sys-learning-04",
   "kb2-cs-similar-01",
 ];
 export const getQuestion = (id) => QUESTIONS.find((question) => question.id === id);
