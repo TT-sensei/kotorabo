@@ -17,9 +17,9 @@ test("学習ジャンルは語彙に特化した6ジャンル", () => {
 });
 
 test("有効な問題バンクは語彙問題だけで構成される", () => {
-  assert.equal(QUESTIONS.length, 198);
+  assert.equal(QUESTIONS.length, 228);
   assert.equal(VOCABULARY_EXPANSION_DATA.length, 60);
-  assert.equal(MUNICIPAL_VOCABULARY_DATA.length, 36);
+  assert.equal(MUNICIPAL_VOCABULARY_DATA.length, 66);
   assert.equal(new Set(QUESTIONS.map((question) => question.id)).size, QUESTIONS.length);
   const skillIds = new Set(SKILL_MAP.map((skill) => skill.id));
   QUESTIONS.forEach((question) => {
@@ -130,7 +130,7 @@ test("文脈で使う語彙問題は独自作成され、学びの観点が付�
 test("新しい教科横断語彙36問は6ジャンルに均等に追加される", () => {
   const counts = Object.fromEntries(Object.keys(LABS).map((lab) => [lab, 0]));
   MUNICIPAL_VOCABULARY_DATA.forEach(([, question]) => { counts[question.lab] += 1; });
-  assert.deepEqual(counts, { meaning:6, precise:6, feelings:6, sensory:6, learning:6, structure:6 });
+  assert.deepEqual(counts, { meaning:11, precise:11, feelings:11, sensory:11, learning:11, structure:11 });
   MUNICIPAL_VOCABULARY_DATA.forEach(([id, question]) => {
     assert.ok(question.vocabularyTerm, id);
     assert.ok(question.vocabularyMeaning, id);
