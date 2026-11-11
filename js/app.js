@@ -5,6 +5,10 @@ import { loadAttempts, loadBadges, loadNotebook, loadProfile, resetLearningData,
 import { awardResearchXP, getResearchStatus } from "./core/research-xp.js";
 import { BADGES, evaluateBadgeIds, getBadge } from "./data/badges.js";
 import { NAVI, naviImage } from "./data/navi.js";
+import { applyFurigana } from "./core/furigana.js";
+
+// トップの場面イラストは、開くたびに3枚から1枚を選ぶ（6人集合絵は使わない）
+const heroScene = NAVI.heroScenes[Math.floor(Math.random() * NAVI.heroScenes.length)];
 
 const app = document.querySelector("#app");
 const roleLabel = {
@@ -62,24 +66,9 @@ const state = {
 const labKeys = Object.keys(LABS);
 const progress = () => buildProgress(state.attempts);
 
-const hiraganaReplacements = [
-  ["類義語", "るいぎご"], ["対義語", "たいぎご"], ["慣用句", "かんようく"], ["故事成語", "こじせいご"],
-  ["接頭語", "せっとうご"], ["接尾語", "せつびご"], ["熟語", "じゅくご"], ["構成", "こうせい"],
-  ["客観的", "じじつにもとづいて"], ["具体例", "ぐたいてきな れい"], ["抽象語", "ちゅうしょうご"], ["温暖", "おんだん"],
-  ["岩石", "がんせき"], ["不可能", "ふかのう"], ["未完成", "みかんせい"], ["運動場", "うんどうじょう"],
-  ["図書室", "としょしつ"], ["観察", "かんさつ"], ["調査", "ちょうさ"], ["提案", "ていあん"],
-  ["説明", "せつめい"], ["原因", "げんいん"], ["結果", "けっか"], ["理由", "りゆう"],
-  ["順番", "じゅんばん"], ["範囲", "はんい"], ["関係", "かんけい"], ["目的", "もくてき"],
-  ["相手", "あいて"], ["学習", "がくしゅう"], ["学校", "がっこう"], ["言葉", "ことば"],
-  ["気持ち", "きもち"], ["一番", "いちばん"], ["考え", "かんがえ"], ["伝わ", "つたわ"],
-  ["詳しく", "くわしく"], ["例えば", "たとえば"], ["最も", "もっとも"], ["選ぶ", "えらぶ"],
-  ["選ん", "えらん"], ["選び", "えらび"], ["読書", "どくしょ"], ["読む", "よむ"], ["読ん", "よん"],
-  ["書く", "かく"], ["書い", "かい"],
-];
-
 function displayText(value) {
   if (state.profile.furigana !== "more" || !value) return value || "";
-  return hiraganaReplacements.reduce((text, [word, reading]) => text.replaceAll(word, reading), String(value));
+  return applyFurigana(value);
 }
 
 function researchStatusTemplate(compact = false) {
@@ -123,7 +112,7 @@ function homeTemplate() {
         <button class="primary-button home-start-button" data-size="5">今日のことばに挑戦 <span>→</span></button>
         <small class="home-start-note">${reviewCount ? `前に迷った言葉も、ちがう問題で確かめよう（${reviewCount}項目）` : "今の理解に合わせて、問題のむずかしさが少しずつ変わるよ。"}</small>
       </div>
-      <div class="home-hero-side">${researchStatusTemplate()} ${naviImage(NAVI.groupStudying, "ことばの研究を応援する仲間たち", "hero-navi")}</div>
+      <div class="home-hero-side">${researchStatusTemplate()}<figure class="hero-scene">${naviImage(heroScene, "ことばを一緒に学ぶ仲間たち", "hero-scene-img")}</figure></div>
     </section>
     <section class="home-discover">
       <div class="section-heading"><div><p>ことばの探検</p><h2>気になるところから見てみよう</h2></div><span>どこから始めてもOK</span></div>
@@ -147,7 +136,7 @@ function homeTemplate() {
 }
 function settingsTemplate() {
   return `<main class="settings-page"><section class="page-intro"><p class="eyebrow">⚙️ ことラボの設定</p><h1>読みやすさを整える</h1><p>学年や問題レベルを選ぶ必要はありません。答え方に合わせて、問題の難しさが自動で変わります。</p></section>
-    <section class="settings-card"><div class="settings-heading"><span>🔤</span><div><h2>文字の読みやすさ</h2><p>読みやすいほうをえらんでね。</p></div></div><div class="choice-row wide"><button data-furigana="grade" class="${state.profile.furigana === "grade" ? "selected" : ""}">漢字をそのまま表示</button><button data-furigana="more" class="${state.profile.furigana === "more" ? "selected" : ""}">ひらがな多め</button></div></section>
+    <section class="settings-card"><div class="settings-heading"><span>🔤</span><div><h2>文字の読みやすさ</h2><p>読みやすいほうをえらんでね。</p></div></div><div class="choice-row wide"><button data-furigana="grade" class="${state.profile.furigana === "grade" ? "selected" : ""}">漢字をそのまま表示</button><button data-furigana="more" class="${state.profile.furigana === "more" ? "selected" : ""}">ふりがなをつける</button></div><p class="adaptive-note">ふりがなは、読みが決まっている言葉にだけ付きます。問題のことばや選択肢、解説に表示されます。</p></section>
     <section class="settings-card"><div class="settings-heading"><span>↗</span><div><h2>問題のむずかしさ</h2><p>正解が続くと少しずつ難しくなり、迷ったときは前の段階に戻って確かめます。</p></div></div><p class="adaptive-note">一人ひとりの学習履歴に合わせて調整します。学年の登録やレベル変更はありません。</p></section>
     <div class="page-actions"><button class="primary-button" data-action="home">ホームへ戻る <span>→</span></button></div></main>`;
 }
@@ -187,7 +176,7 @@ function questionTemplate() {
   const feedbackNavi = state.quality === "best" ? NAVI.correct : state.quality === "acceptable" ? NAVI.acceptable : NAVI.retry;
   const canRetry = state.quality !== "best" && state.tryNumber < 2;
   return `<main class="research-page"><section class="research-topline"><div><span class="lab-token ${lab.color}">${lab.icon}</span><div><small>${lab.label}</small><strong>${roleLabel[item.role]}</strong></div></div><p><b>${state.position + 1}</b> / ${state.queue.length}</p></section><div class="research-progress"><i style="width:${((state.position + 1) / state.queue.length) * 100}%"></i></div>
-    <section class="question-card"><div class="question-meta"><span>きょうのポイント</span><b>${displayText(q.subskill)}</b><small>チャレンジ：${DEPTH_LABELS[q.depth]}${state.profile.furigana === "more" ? " ／ 🔤 ひらがな多め" : ""}</small>${q.learningLens ? `<small class="learning-lens">${({treasure:"言葉の宝箱",dialogue:"伝え合い",academic:"学習で使う言葉",structure:"言葉の成り立ち"})[q.learningLens]}</small>` : ""}</div>
+    <section class="question-card"><div class="question-meta"><span>きょうのポイント</span><b>${displayText(q.subskill)}</b><small>チャレンジ：${DEPTH_LABELS[q.depth]}${state.profile.furigana === "more" ? " ／ 🔤 ふりがな" : ""}</small>${q.learningLens ? `<small class="learning-lens">${({treasure:"言葉の宝箱",dialogue:"伝え合い",academic:"学習で使う言葉",structure:"言葉の成り立ち"})[q.learningLens]}</small>` : ""}</div>
     ${(q.audience || q.goal) ? `<div class="situation-strip">${q.audience ? `<span><b>だれに？</b>${displayText(q.audience)}</span>` : ""}${q.goal ? `<span><b>何のため？</b>${displayText(q.goal)}</span>` : ""}</div>` : ""}
     ${q.context ? `<p class="question-context">${displayText(q.context)}</p>` : ""}<h1>${displayText(q.prompt)}</h1><div class="option-grid">${options.map((option, index) => { const chosen = state.selectedId === option.id; return `<button data-option="${option.id}" class="${chosen ? `selected ${state.quality}` : ""}" ${(state.quality === "best" || (state.quality && !canRetry)) ? "disabled" : ""}><span>${String.fromCharCode(65 + index)}</span><strong>${displayText(option.text)}</strong>${chosen && state.quality ? `<b>${qualityCopy[state.quality].mark}</b>` : ""}</button>`; }).join("")}</div>
     ${!state.quality ? `<button class="hint-button" data-action="hint" ${state.usedHint ? "disabled" : ""}>💡 ${state.usedHint ? "ヒントを表示中" : "ヒントを見る"}</button>` : ""}

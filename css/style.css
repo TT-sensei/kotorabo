@@ -213,3 +213,12 @@ body{font-size:18px}
  .notebook-entry-list{grid-template-columns:1fr}
  .notebook-guide{display:grid;gap:7px}
 }
+
+/* ふりがな（設定で「ふりがなをつける」を選んだとき） */
+ruby rt{font-size:.52em;font-weight:600;color:#5b7a72;letter-spacing:.02em}
+
+/* トップの場面イラスト（額縁のように見せる） */
+.hero-scene{margin:12px 0 0;width:100%;max-width:360px;aspect-ratio:3/2;border-radius:18px;overflow:hidden;box-shadow:0 10px 24px rgba(15,64,53,.16);line-height:0;background:rgba(255,255,255,.08)}
+.hero-scene-img{width:100%;height:100%;object-fit:cover;display:block}
+@media(max-width:850px){.hero-scene{max-width:300px}}
+@media(max-width:620px){.hero-scene{max-width:100%}}
