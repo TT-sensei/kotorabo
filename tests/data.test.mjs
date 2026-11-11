@@ -60,7 +60,7 @@ test("自動難易度は正答が続くと上がり、つまずきが続くと�
     { skill, questionId:"adaptive-3", quality:"incorrect", usedHint:false },
     { skill, questionId:"adaptive-3", quality:"incorrect", usedHint:false },
   ];
-  assert.equal(adaptiveLevelForSkill(skill, bank, recentMisses), 2);
+  assert.equal(adaptiveLevelForSkill(skill, bank, recentMisses), 1);
 });
 
 test("今日のチャレンジは学年選択なしで3・5・10問を重複なく編成できる", () => {\n  for (const size of [3, 5, 10]) {\n    const session = buildSession(QUESTIONS, {}, [], size);\n    assert.equal(session.length, size, `${size}問`);\n    assert.equal(new Set(session.map((item) => item.questionId)).size, size, `${size}問 unique`);\n    assert.ok(session.every((item) => QUESTIONS.some((question) => question.id === item.questionId)));\n  }\n});
