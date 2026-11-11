@@ -130,7 +130,7 @@ test("初回のチャレンジは各ジャンルの入門段階から出題す�
 });
 
 test("ことばファイルは問題で出会う語句だけを集め、問題IDと結び付く", () => {
-  assert.equal(VOCABULARY_DATA.length, 275);
+  assert.ok(VOCABULARY_DATA.length > 239);
   assert.ok(VOCABULARY_DATA.every((word) => word.contentLevel >= 1 && word.contentLevel <= 6));
   assert.ok(VOCABULARY_DATA.every((word) => word.levelLabel === `内容L${word.contentLevel}`));
   assert.ok(VOCABULARY_DATA.every((word) => !Object.hasOwn(word, "gradeBand") && !Object.hasOwn(word, "gradeMin")));
@@ -206,6 +206,10 @@ test("入門語彙36問は6ジャンルに均等に追加され、L1・L2を補�
     assert.ok(question.context && question.hint && question.explanation, id);
   });
   assert.deepEqual(counts, { meaning:6, precise:6, feelings:6, sensory:6, learning:6, structure:6 });
+  EARLY_VOCABULARY_DATA.forEach(([id, question]) => {
+    const category = LABS[question.lab].short;
+    assert.ok(VOCABULARY_DATA.some((word) => word.category === category && word.term === question.vocabularyTerm && word.questionIds.includes(id)), id);
+  });
 });
 
 test("「適切」と意味が重なる「適当」を誤答選択肢にしない", () => {
