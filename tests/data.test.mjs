@@ -33,6 +33,7 @@ test("有効な問題バンクは語彙問題だけで構成される", () => {
     assert.ok(question.contentLevel >= 1 && question.contentLevel <= 6, `${question.id}: level`);
     assert.ok(question.depth >= 1 && question.depth <= 6, `${question.id}: depth`);
   });
+  assert.ok(QUESTIONS.every((question) => !Object.hasOwn(question, "gradeMin")));
   assert.ok(QUESTIONS.every((question) => !question.skill.startsWith("sentence.") && !question.skill.startsWith("connection.") && !question.skill.startsWith("passage.")));
   assert.ok(QUESTIONS.every((question) => question.lab !== "expressions"));
 });
@@ -74,14 +75,47 @@ test("今日のチャレンジは学年選択なしで5問を重複なく編成�
   assert.ok(session.every((item) => QUESTIONS.some((question) => question.id === item.questionId)));
 });
 
-test("6ジャンルすべてで5問の特訓を編成できる", () => {
+test("チャレンジのstretchは可能な場合に適応レベルより一段上を出す", () => {
+  const session = buildSession(QUESTIONS, {}, [], 5);
+  const stretch = session.find((item) => item.role === "stretch");
+  assert.ok(stretch, "stretch role exists");
+  const question = QUESTIONS.find((item) => item.id === stretch.questionId);
+  const target = adaptiveLevelForSkill(question.skill, QUESTIONS, []);
+  assert.ok(question.contentLevel > target, `${question.id}: stretch should exceed ${target}`);
+});
+
+test("初期レベルの問題が5問未満のジャンルでも特訓を5問編成できる", () => {
+  const limitedSkills = SKILL_MAP.filter((skill) => {
+    const levels = QUESTIONS.filter((question) => question.skill === skill.id).map((question) => question.contentLevel);
+    const minimum = Math.min(...levels);
+    return levels.filter((level) => level === minimum).length < 5;
+  });
+  assert.ok(limitedSkills.length > 0, "少数の初期レベルを持つジャンルを検出");
+  for (const skill of limitedSkills) {
+    assert.equal(buildFocusSession(QUESTIONS, {}, [], skill.id, 5).length, 5, skill.id);
+  }
+});
+
+test("6ジャンルすべてで3問・5問の特訓を必ず編成できる", () => {
   for (const skill of SKILL_MAP) {
-    const session = buildFocusSession(QUESTIONS, { grade:3, challengeLevel:3 }, [], skill.id, 5);
-    const questions = session.map((item) => QUESTIONS.find((question) => question.id === item.questionId));
+    for (const size of [3, 5]) {
+      const session = buildFocusSession(QUESTIONS, { grade:3, challengeLevel:3 }, [], skill.id, size);
+      const questions = session.map((item) => QUESTIONS.find((question) => question.id === item.questionId));
+      assert.equal(session.length, size, `${skill.id}: ${size}問`);
+      assert.equal(new Set(session.map((item) => item.questionId)).size, size, `${skill.id}: unique`);
+      assert.ok(questions.every((question) => question.lab === skill.lab && question.skill === skill.id), `${skill.id}: same skill`);
+    }
+  }
+});
+
+test("直近の問題が多くても特訓の問題数を確保する", () => {
+  for (const skill of SKILL_MAP) {
+    const recent = QUESTIONS.filter((question) => question.skill === skill.id).slice(0, 5).map((question) => ({
+      skill:skill.id, questionId:question.id, quality:"best", usedHint:false,
+    }));
+    const session = buildFocusSession(QUESTIONS, {}, recent, skill.id, 5);
     assert.equal(session.length, 5, skill.id);
-    assert.equal(new Set(session.map((item) => item.questionId)).size, 5, `${skill.id}: unique`);
-    assert.ok(questions.every((question) => question.lab === skill.lab), `${skill.id}: same domain`);
-    assert.ok(questions.some((question) => question.skill === skill.id), `${skill.id}: selected skill`);
+    assert.equal(new Set(session.map((item) => item.questionId)).size, 5, skill.id);
   }
 });
 
@@ -95,7 +129,10 @@ test("初回のチャレンジは各ジャンルの入門段階から出題す�
 });
 
 test("ことばファイルは問題で出会う語句だけを集め、問題IDと結び付く", () => {
-  assert.ok(VOCABULARY_DATA.length >= 170);
+  assert.equal(VOCABULARY_DATA.length, 239);
+  assert.ok(VOCABULARY_DATA.every((word) => word.contentLevel >= 1 && word.contentLevel <= 6));
+  assert.ok(VOCABULARY_DATA.every((word) => word.levelLabel === `内容L${word.contentLevel}`));
+  assert.ok(VOCABULARY_DATA.every((word) => !Object.hasOwn(word, "gradeBand") && !Object.hasOwn(word, "gradeMin")));
   assert.equal(new Set(VOCABULARY_DATA.map((word) => word.id)).size, VOCABULARY_DATA.length);
   const ids = new Set(QUESTIONS.map((question) => question.id));
   VOCABULARY_DATA.forEach((word) => {
@@ -170,7 +207,19 @@ test("選択肢の並び替えは再現可能", () => {
   assert.deepEqual(orderQuestionOptions(sample), orderQuestionOptions(sample));
 });
 
+test("正解の表示位置は4か所に偏りなく分散する", () => {
+  const positions = [0, 0, 0, 0];
+  QUESTIONS.forEach((question) => {
+    const ordered = orderQuestionOptions(question);
+    positions[ordered.findIndex((option) => option.quality === "best")] += 1;
+  });
+  positions.forEach((count, index) => {
+    assert.ok(count >= 40 && count <= 100, `position ${index + 1}: ${count}`);
+  });
+});
+
 test("達成バッジは6ジャンルに対応し、学習過程も評価する", () => {
+  assert.equal(BADGES.length, 14);
   assert.equal(new Set(BADGES.map((badge) => badge.id)).size, BADGES.length);
   assert.equal(BADGES.filter((badge) => badge.id.startsWith("skill-")).length, 6);
   const sampleQuestion = QUESTIONS.find((question) => question.purpose === "transfer");

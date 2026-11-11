@@ -26,7 +26,6 @@ export const question = (lab, prefix) => (
     thinkingTags: meta.thinkingTags ?? [],
     crossTags: meta.crossTags ?? [],
     theme,
-    gradeMin: meta.gradeMin ?? level,
     ...(context ? { context } : {}),
     ...(meta.audience ? { audience: meta.audience } : {}),
     ...(meta.goal ? { goal: meta.goal } : {}),

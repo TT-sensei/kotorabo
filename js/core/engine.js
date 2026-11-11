@@ -11,12 +11,22 @@ function hash(input) {
 
 const stableSort = (items, seed) => [...items].sort((a, b) => hash(`${seed}:${a.id}`) - hash(`${seed}:${b.id}`));
 
-export const orderQuestionOptions = (question) => stableSort(question.options, `${question.id}:option`);
+// 正解位置は問題IDから4か所へ分散し、誤答の並びも固定して再現可能にする。
+export const orderQuestionOptions = (question) => {
+  const best = question.options.find((option) => option.quality === "best");
+  const distractors = stableSort(
+    question.options.filter((option) => option.quality !== "best"),
+    `${question.id}:distractors`,
+  );
+  if (!best) return stableSort(question.options, `${question.id}:option`);
+  distractors.splice(hash(`${question.id}:answer-position`) % (distractors.length + 1), 0, best);
+  return distractors;
+};
 
 export function buildDiagnosticSession(bank, diagnosticIds, profile) {
   const targetLevel = profile.challengeLevel ?? profile.grade;
   const diagnosticSet = new Set(diagnosticIds);
-  const available = bank.filter((question) => diagnosticSet.has(question.id) && question.gradeMin <= targetLevel);
+  const available = bank.filter((question) => diagnosticSet.has(question.id) && question.contentLevel <= targetLevel);
 
   return [...new Set(SKILL_MAP.map((skill) => skill.lab))].map((lab) => {
     const candidates = stableSort(
@@ -91,17 +101,15 @@ export function buildSession(bank, profile, attempts, size) {
   const known = new Set(progress.filter((item) => item.attempts > 0).map((item) => item.skill));
   const strong = new Set(progress.filter((item) => item.stableDepth >= 3).map((item) => item.skill));
 
-  function take(role, test) {
-    let pool = stableSort(bank.filter((question) => {
+  function take(role, test, allowOneLevelAbove = false) {
+    const eligible = (question) => {
       const level = skillLevels.get(question.skill) || 1;
       const firstAvailable = minimumLevels.get(question.skill) || 1;
-      return !used.has(question.id) && !recentIds.has(question.id) && question.contentLevel <= Math.max(level, firstAvailable) && test(question);
-    }), `${seed}:${role}`);
-    if (!pool.length) pool = stableSort(bank.filter((question) => {
-      const level = skillLevels.get(question.skill) || 1;
-      const firstAvailable = minimumLevels.get(question.skill) || 1;
-      return !used.has(question.id) && question.contentLevel <= Math.max(level, firstAvailable) && test(question);
-    }), `${seed}:${role}:fallback`);
+      const ceiling = Math.max(level, firstAvailable) + (allowOneLevelAbove ? 1 : 0);
+      return !used.has(question.id) && question.contentLevel <= ceiling && test(question);
+    };
+    let pool = stableSort(bank.filter((question) => !recentIds.has(question.id) && eligible(question)), `${seed}:${role}`);
+    if (!pool.length) pool = stableSort(bank.filter(eligible), `${seed}:${role}:fallback`);
     if (!pool.length) return false;
     const recentThemes = new Set(result.slice(-2).map((item) => bank.find((question) => question.id === item.questionId)?.theme).filter(Boolean));
     const chosen = pool.find((question) => !question.theme || !recentThemes.has(question.theme)) || pool[0];
@@ -120,8 +128,10 @@ export function buildSession(bank, profile, attempts, size) {
     if (role === "retry") take(role, (question) => weak.has(question.skill)) || take(role, (question) => known.has(question.skill));
     else if (role === "recall") take(role, (question) => known.has(question.skill));
     else if (role === "transfer") take(role, (question) => question.purpose === "transfer" && (!strong.size || strong.has(question.skill))) || take(role, (question) => question.purpose === "transfer");
-    else if (role === "stretch") take(role, (question) => question.contentLevel >= (skillLevels.get(question.skill) || 1));
-    else take(role, (question) => !known.has(question.skill)) || take(role, () => true);
+    else if (role === "stretch") {
+      take(role, (question) => question.contentLevel > (skillLevels.get(question.skill) || 1), true)
+        || take(role, (question) => question.contentLevel >= (skillLevels.get(question.skill) || 1));
+    } else take(role, (question) => !known.has(question.skill)) || take(role, () => true);
   });
   while (result.length < size && take("current", () => true)) { /* 問題がある限り出題 */ }
   return result.slice(0, size);
@@ -134,27 +144,26 @@ export function buildFocusSession(bank, profile, attempts, skillId, size = 5) {
   const progress = new Map(buildProgress(attempts).map((item) => [item.skill, item]));
   const recentIds = new Set(attempts.slice(-5).map((item) => item.questionId));
   const seed = `focus:${skillId}:${attempts.length}:${size}`;
-  const skillMinimum = Math.min(...bank.filter((question) => question.skill === skillId).map((question) => question.contentLevel || 1));
-  const candidates = bank.filter((question) => question.lab === skill.lab && question.contentLevel <= Math.max(targetLevel, skillMinimum || 1));
+
+  // 特訓は選んだジャンルの問題を必ず指定数出す。
+  // 適応レベル以下だけでは問題数が足りないため、近い上位レベルも候補に含める。
+  const allCandidates = bank.filter((question) => question.lab === skill.lab && question.skill === skillId);
+  const freshCandidates = allCandidates.filter((question) => !recentIds.has(question.id));
+  const candidates = freshCandidates.length >= size ? freshCandidates : allCandidates;
   const ranked = stableSort(candidates, seed).sort((a, b) => {
     const score = (question) => {
-      const exact = question.skill === skillId ? 1000 : 0;
       const learning = progress.get(question.skill);
       const review = learning?.needsReview ? 120 : 0;
       const unseen = learning?.attempts ? 0 : 35;
-      const nearby = 120 - Math.abs(question.contentLevel - targetLevel) * 24;
-      const fresh = recentIds.has(question.id) ? -80 : 0;
-      return exact + review + unseen + nearby + fresh;
+      const nearby = 180 - Math.abs(question.contentLevel - targetLevel) * 55;
+      const freshness = recentIds.has(question.id) ? -160 : 0;
+      return review + unseen + nearby + freshness;
     };
     return score(b) - score(a);
   });
-  const chosen = ranked.filter((question) => question.skill === skillId).slice(0, size);
-  for (const question of ranked) {
-    if (chosen.length >= size) break;
-    if (!chosen.some((item) => item.id === question.id)) chosen.push(question);
-  }
-  return chosen.slice(0, size).map((question) => ({ questionId: question.id, role: "focus" }));
+  return ranked.slice(0, Math.min(size, allCandidates.length)).map((question) => ({ questionId: question.id, role: "focus" }));
 }
+
 export function findDelayedRetry(bank, current, usedIds, level) {
   const currentTags = new Set([...(current.thinkingTags || []), ...(current.crossTags || [])]);
   const candidates = bank.filter((q) => q.id !== current.id && !usedIds.has(q.id) && q.skill === current.skill && q.contentLevel <= level && (q.similarGroup !== current.similarGroup || q.transferGroup === current.transferGroup));
