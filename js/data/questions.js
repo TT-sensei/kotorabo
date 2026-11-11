@@ -91,6 +91,7 @@ for (const question of QUESTIONS) {
   if (existing) {
     existing.questionIds.push(question.id);
     existing.contentLevel = Math.min(existing.contentLevel, question.contentLevel || 1);
+    existing.levelLabel = `内容L${existing.contentLevel}`;
     continue;
   }
 
