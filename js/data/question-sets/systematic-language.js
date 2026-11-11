@@ -2,15 +2,11 @@
 // 特定の教科書の掲載語一覧、分類順、例文は使用していません。
 
 const CATEGORY_BY_SKILL = {
-  "words.semantic_groups": "くらしの言葉",
-  "words.feeling_character": "気持ちと人がら",
-  "words.traditional_expressions": "昔から伝わる言葉",
-  "words.word_formation": "ことばの組み立て",
-  "words.learning_terms": "学習で使う言葉",
-  "sentence.register_keigo": "相手に合わせる言葉",
+  "words.semantic_groups": "ことばの意味・仲間",
+  "words.feeling_character": "気持ち・人がら",
+  "words.word_formation": "ことばの成り立ち",
+  "words.learning_terms": "学習・思考のことば",
 };
-
-const LAB_BY_SKILL = { "sentence.register_keigo": "sentence" };
 const DEPTH_BY_LEVEL = [0, 1, 2, 3, 4, 5, 6];
 
 const entries = [
@@ -108,10 +104,10 @@ function buildOptions(entry) {
   return options.slice(0, 4);
 }
 
-export const SYSTEMATIC_LANGUAGE_DATA = entries.map((entry) => [
+export const SYSTEMATIC_LANGUAGE_DATA = entries.filter((entry) => entry.skill !== "sentence.register_keigo" && entry.skill !== "words.traditional_expressions").map((entry) => [
   `sys-${entry.id}`,
   {
-    lab: LAB_BY_SKILL[entry.skill] || "words",
+    lab: "words",
     skill: entry.skill,
     subskill: entry.subskill,
     contentLevel: entry.level,
@@ -132,7 +128,7 @@ export const SYSTEMATIC_LANGUAGE_DATA = entries.map((entry) => [
   },
 ]);
 
-export const SYSTEMATIC_VOCABULARY = entries.map((entry) => ({
+export const SYSTEMATIC_VOCABULARY = entries.filter((entry) => entry.skill !== "sentence.register_keigo" && entry.skill !== "words.traditional_expressions").map((entry) => ({
   id: `sys-vocab-${entry.id}`,
   term: entry.best,
   category: CATEGORY_BY_SKILL[entry.skill],

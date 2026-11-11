@@ -1,0 +1,49 @@
+import { question } from "./helpers.js";
+
+const q = question("structure", "cs");
+const TYPES = [
+  "似た意味の漢字を組み合わせる",
+  "反対の意味の漢字を組み合わせる",
+  "上の漢字が下の漢字を詳しくする",
+  "下の漢字が上の漢字の目的・対象を表す",
+  "上が主語、下が述語になる",
+  "上の漢字が下の漢字の意味を打ち消す",
+];
+
+const item = (id, level, subskill, term, meaning, example, answerIndex) => {
+  const optionIndices = [answerIndex, ...[1, 2, 3].map((offset) => (answerIndex + offset) % TYPES.length)];
+  const options = optionIndices.map((index) => [
+    TYPES[index],
+    index === answerIndex ? "best" : "incorrect",
+    index === answerIndex ? meaning : "二つの漢字を訓読みにして、意味の関係を考え直そう。",
+  ]);
+  return q(
+    id, level, "vocab.structure", subskill, "熟語の構成", example,
+    `「${term}」の二つの漢字は、どのような関係で組み合わさっている？`,
+    options,
+    "二つの漢字を一字ずつ訓読みにして、どのようにつながるか考えよう。",
+    meaning,
+    {
+      purpose: level === 6 ? "transfer" : "practice",
+      thinkingTags: ["熟語", "構成", subskill],
+      vocabularyTerm: term,
+      vocabularyMeaning: meaning,
+      vocabularyExample: example,
+    },
+  );
+};
+
+export const COMPOUND_STRUCTURE_DATA = [
+  item("similar-01", 5, "似た意味の漢字", "温暖", "「温かい」と「暖かい」のように、近い意味の漢字を重ねています。", "春になり、気候が温暖になってきました。", 0),
+  item("similar-02", 5, "似た意味の漢字", "岩石", "「岩」と「石」のように、似た意味の漢字を組み合わせています。", "海岸にはさまざまな岩石が見られます。", 0),
+  item("opposite-01", 5, "反対の意味の漢字", "左右", "「左」と「右」のように、反対の意味を表す漢字です。", "左右をよく確かめてから道を渡ろう。", 1),
+  item("opposite-02", 5, "反対の意味の漢字", "寒暖", "「寒い」と「暖かい」のように、反対の意味を表します。", "季節による寒暖の差が大きくなりました。", 1),
+  item("modify-01", 5, "上の漢字が下を詳しくする", "高温", "「高い温度」と読めるように、上の漢字が下の漢字を詳しくしています。", "高温になると、食品の保存に注意が必要です。", 2),
+  item("modify-02", 5, "上の漢字が下を詳しくする", "新車", "「新しい車」と読めるように、上の漢字が下の漢字を詳しくしています。", "駅前に新車が展示されていました。", 2),
+  item("object-01", 5, "下の漢字が目的・対象を表す", "登山", "「山に登る」と読めます。「山」が登る対象になっています。", "夏休みに家族で登山をしました。", 3),
+  item("object-02", 5, "下の漢字が目的・対象を表す", "読書", "「書を読む」と読めます。「書」が読む対象になっています。", "寝る前に読書をするのが日課です。", 3),
+  item("subject-01", 6, "主語と述語の関係", "日没", "「日が没する」と読めます。上の漢字が主語、下の漢字が述語です。", "日没の時刻が少しずつ早くなっています。", 4),
+  item("subject-02", 6, "主語と述語の関係", "国営", "「国が営む」と読めます。上の漢字が主語、下の漢字が述語です。", "国営の施設について調べました。", 4),
+  item("negative-01", 6, "打ち消しの意味を加える", "不可能", "「可能」を「不」が打ち消し、「できない」という意味になります。", "一人で運ぶのは不可能だと分かりました。", 5),
+  item("negative-02", 6, "打ち消しの意味を加える", "未完成", "「完成」を「未」が打ち消し、「まだ完成していない」という意味です。", "この作品はまだ未完成です。", 5),
+];

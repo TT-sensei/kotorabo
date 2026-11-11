@@ -1,33 +1,21 @@
 export const LABS = {
-  words: { icon: "Aa", label: "ことばラボ", short: "ことば", color: "mint", question: "どのことばがぴったり？" },
-  sentence: { icon: "文", label: "文づくりラボ", short: "文づくり", color: "blue", question: "どうすれば伝わる文になる？" },
-  connection: { icon: "⇄", label: "つながりラボ", short: "つながり", color: "amber", question: "どんな関係でつながっている？" },
-  passage: { icon: "¶", label: "文章ラボ", short: "文章", color: "violet", question: "どう組み立てれば伝わる？" },
+  meaning: { icon: "Aa", label: "ことばの意味・仲間", short: "意味・仲間", color: "mint", question: "言葉の意味や仲間を見つけよう。" },
+  precise: { icon: "◇", label: "ぴったりのことば", short: "ぴったり", color: "blue", question: "似た言葉の違いや、場面に合う言葉を考えよう。" },
+  feelings: { icon: "♡", label: "気持ち・人がら", short: "気持ち", color: "amber", question: "心の動きや人がらを表す言葉を知ろう。" },
+  sensory: { icon: "〰", label: "動き・様子・感覚", short: "動き・様子", color: "violet", question: "動きや様子を細やかに表す言葉を知ろう。" },
+  learning: { icon: "学", label: "学習・思考のことば", short: "学習・思考", color: "rose", question: "調べる・比べる・考えるときに使う言葉を知ろう。" },
+  structure: { icon: "組", label: "ことばの成り立ち・熟語の構成", short: "成り立ち", color: "teal", question: "言葉や熟語がどのようにできているか考えよう。" },
 };
 
-// idは学習履歴のキーです。一度公開したidは変更しません。
 export const SKILL_MAP = [
-  { id: "words.basic_meaning", lab: "words", label: "ことばの意味", description: "基本語の意味や仲間を捉える。" },
-  { id: "words.semantic_groups", lab: "words", label: "ことばの仲間", description: "身近な言葉を意味のまとまりで整理する。" },
-  { id: "words.precise_choice", lab: "words", label: "ぴったりのことば", description: "場面や目的に合う語を選ぶ。" },
-  { id: "words.feeling_character", lab: "words", label: "気持ちと人がら", description: "心情・行動・性格を表す言葉を使い分ける。" },
-  { id: "words.traditional_expressions", lab: "words", label: "昔から伝わる言葉", description: "ことわざ・慣用句・故事成語の意味を捉える。" },
-  { id: "words.word_formation", lab: "words", label: "ことばの組み立て", description: "接頭語・接尾語・複合語の成り立ちを考える。" },
-  { id: "words.learning_terms", lab: "words", label: "学習に使う言葉", description: "要旨・根拠・対比など、考えるための言葉を使う。" },
-  { id: "words.abstract_objective", lab: "words", label: "説明のことば", description: "抽象語と客観・主観を扱う。" },
-  { id: "sentence.core", lab: "sentence", label: "文のほねぐみ", description: "主語と述語の対応を捉える。" },
-  { id: "sentence.detail_order", lab: "sentence", label: "くわしく伝える", description: "情報、修飾、語順を整える。" },
-  { id: "sentence.reader_design", lab: "sentence", label: "相手に伝わる文", description: "目的と相手に合わせて文を調整する。" },
-  { id: "sentence.register_keigo", lab: "sentence", label: "場面に合う言い方", description: "敬語や話し言葉・書き言葉を相手に合わせる。" },
-  { id: "connection.sequence_cause", lab: "connection", label: "順序とわけ", description: "順序、原因、結果を捉える。" },
-  { id: "connection.connectives", lab: "connection", label: "接続詞を使い分ける", description: "73問で、だから・しかし・例えばなどを文の関係に合わせて選ぶ。" },
-  { id: "connection.logic_relations", lab: "connection", label: "文と文のつながり", description: "理由、具体例、対比などを区別する。" },
-  { id: "connection.logic_quality", lab: "connection", label: "つながりを確かめる", description: "根拠や論理の十分さを考える。" },
-  { id: "passage.order_topic", lab: "passage", label: "文のまとまり", description: "話題と自然な順序を捉える。" },
-  { id: "passage.structure", lab: "passage", label: "文章の組み立て", description: "主張、理由、具体例、まとめを捉える。" },
-  { id: "passage.revision_design", lab: "passage", label: "もっと伝わる文章", description: "不足やずれを直し、文章を設計する。" },
+  { id: "vocab.meaning", lab: "meaning", label: "意味と仲間を広げる", description: "言葉の意味、類義語・対義語・仲間分けを捉える。" },
+  { id: "vocab.precise", lab: "precise", label: "似た言葉を使い分ける", description: "意味の近い言葉の違いや、場面に合う語を選ぶ。" },
+  { id: "vocab.feelings", lab: "feelings", label: "気持ちと人がらを表す", description: "心情・性格・人への接し方を表す言葉を広げる。" },
+  { id: "vocab.sensory", lab: "sensory", label: "動きや様子を細かく表す", description: "動作・音・感覚・状態を具体的に表す言葉を知る。" },
+  { id: "vocab.learning", lab: "learning", label: "学習・思考の言葉を知る", description: "観点・仮説・検証など、教科の学習や考えを整理するときに使う語彙を広げる。" },
+  { id: "vocab.structure", lab: "structure", label: "言葉・熟語の成り立ちを考える", description: "接頭語・接尾語・複合語・二字熟語の構成を捉える。" },
 ];
 
-export const DEPTH_LABELS = ["", "見つける", "なかま分け", "えらぶ", "直してみる", "使ってみる", "ちがうお話でも"];
-export const LEVEL_WORLDS = ["", "身近なことば", "詳しく伝える", "つながりを見つける", "分かりやすく伝える", "考えを組み立てる", "よりよく表現する"];
+export const DEPTH_LABELS = ["", "見つける", "意味を知る", "比べて選ぶ", "使い分ける", "使ってみる", "別の場面でも"];
+export const LEVEL_WORLDS = ["", "身近な言葉", "意味を広げる", "似た言葉を比べる", "表現を使い分ける", "抽象語や熟語を知る", "言葉を使いこなす"];
 export const getSkill = (id) => SKILL_MAP.find((skill) => skill.id === id);
