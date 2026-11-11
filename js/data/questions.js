@@ -1,6 +1,7 @@
 import { WORD_QUESTION_DATA } from "./question-sets/words.js";
 import { SYSTEMATIC_LANGUAGE_DATA, SYSTEMATIC_VOCABULARY } from "./question-sets/systematic-language.js";
 import { COMPOUND_STRUCTURE_DATA } from "./question-sets/compound-structure.js";
+import { VOCABULARY_EXPANSION_DATA } from "./question-sets/vocabulary-expansion.js";
 import { LABS } from "./skill-map.js";
 
 // ことラボで扱うのは語彙・表現に関する問題だけです。
@@ -23,7 +24,6 @@ const categoryFor = (skill, subskill = "") => {
     return "meaning";
   }
   if (skill === "words.feeling_character") return "feelings";
-  if (skill === "words.traditional_expressions") return "expressions";
   if (skill === "words.word_formation") return "structure";
   return null;
 };
@@ -53,6 +53,7 @@ const rawPairs = [
   ...WORD_QUESTION_DATA.map(normalizeLegacyPair),
   ...SYSTEMATIC_LANGUAGE_DATA.map(normalizeLegacyPair),
   ...COMPOUND_STRUCTURE_DATA,
+  ...VOCABULARY_EXPANSION_DATA,
 ].filter(Boolean);
 
 export const QUESTIONS = rawPairs.map(([id, data]) => make(id, data));
@@ -61,7 +62,7 @@ export const DIAGNOSTIC_IDS = [
   "kb2-w-l3-01",
   "kb2-w-l1-01",
   "kb2-w-l1-02",
-  "sys-traditional-01",
+  "sys-learning-01",
   "kb2-cs-similar-01",
 ];
 export const getQuestion = (id) => QUESTIONS.find((question) => question.id === id);
