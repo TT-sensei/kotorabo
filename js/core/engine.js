@@ -54,24 +54,56 @@ export function labReadiness(progress, lab) {
   return { label: value >= 70 ? "ちがうお話へ！" : value >= 40 ? "いい感じ！" : "少しずついこう", value };
 }
 
+export function adaptiveLevelForSkill(skillId, bank, attempts) {
+  const levels = bank
+    .filter((question) => question.skill === skillId)
+    .map((question) => question.contentLevel || 1);
+  if (!levels.length) return 1;
+  const minimum = Math.min(...levels);
+  const maximum = Math.max(...levels);
+  const questionById = new Map(bank.map((question) => [question.id, question]));
+  const records = attempts.filter((attempt) => attempt.skill === skillId).slice(-4);
+  if (!records.length) return minimum;
+
+  const successfulLevels = records
+    .filter((attempt) => attempt.quality === "best" && !attempt.usedHint)
+    .map((attempt) => questionById.get(attempt.questionId)?.contentLevel)
+    .filter(Number.isFinite);
+  const stableLevel = successfulLevels.length ? successfulLevels[successfulLevels.length - 1] : minimum;
+  const recent = records.slice(-3);
+  const recentSuccesses = recent.filter((attempt) => attempt.quality === "best" && !attempt.usedHint).length;
+  const recentMisses = recent.filter((attempt) => attempt.quality === "incorrect").length;
+
+  if (recent.length >= 2 && recentMisses >= 2) return Math.max(minimum, stableLevel - 1);
+  if (recent.length >= 2 && recentSuccesses >= 2) return Math.min(maximum, stableLevel + 1);
+  return Math.max(minimum, Math.min(maximum, stableLevel));
+}
+
 export function buildSession(bank, profile, attempts, size) {
   const progress = buildProgress(attempts);
   const recentIds = new Set(attempts.slice(-5).map((item) => item.questionId));
   const seed = `${new Date().toISOString().slice(0, 10)}:${attempts.length}:${size}`;
-  const targetLevel = profile.challengeLevel ?? profile.grade;
-  // diagnosticは「初回にも使う」という主用途。診断後の定着確認にも再利用できます。
-  const available = bank.filter((q) => q.gradeMin <= targetLevel && q.contentLevel <= Math.min(6, targetLevel + 1));
+  const skillLevels = new Map(SKILL_MAP.map((skill) => [skill.id, adaptiveLevelForSkill(skill.id, bank, attempts)]));
+  const minimumLevels = new Map(SKILL_MAP.map((skill) => [skill.id, Math.min(...bank.filter((question) => question.skill === skill.id).map((question) => question.contentLevel || 1))]));
   const used = new Set();
   const result = [];
-  const weak = new Set(progress.filter((p) => p.needsReview).map((p) => p.skill));
-  const known = new Set(progress.filter((p) => p.attempts > 0).map((p) => p.skill));
-  const strong = new Set(progress.filter((p) => p.stableDepth >= 3).map((p) => p.skill));
+  const weak = new Set(progress.filter((item) => item.needsReview).map((item) => item.skill));
+  const known = new Set(progress.filter((item) => item.attempts > 0).map((item) => item.skill));
+  const strong = new Set(progress.filter((item) => item.stableDepth >= 3).map((item) => item.skill));
 
   function take(role, test) {
-    let pool = stableSort(available.filter((q) => !used.has(q.id) && !recentIds.has(q.id) && test(q)), `${seed}:${role}`);
-    if (!pool.length) pool = stableSort(available.filter((q) => !used.has(q.id) && test(q)), `${seed}:${role}:fallback`);
+    let pool = stableSort(bank.filter((question) => {
+      const level = skillLevels.get(question.skill) || 1;
+      const firstAvailable = minimumLevels.get(question.skill) || 1;
+      return !used.has(question.id) && !recentIds.has(question.id) && question.contentLevel <= Math.max(level, firstAvailable) && test(question);
+    }), `${seed}:${role}`);
+    if (!pool.length) pool = stableSort(bank.filter((question) => {
+      const level = skillLevels.get(question.skill) || 1;
+      const firstAvailable = minimumLevels.get(question.skill) || 1;
+      return !used.has(question.id) && question.contentLevel <= Math.max(level, firstAvailable) && test(question);
+    }), `${seed}:${role}:fallback`);
     if (!pool.length) return false;
-    const recentThemes = new Set(result.slice(-2).map((item) => bank.find((q) => q.id === item.questionId)?.theme).filter(Boolean));
+    const recentThemes = new Set(result.slice(-2).map((item) => bank.find((question) => question.id === item.questionId)?.theme).filter(Boolean));
     const chosen = pool.find((question) => !question.theme || !recentThemes.has(question.theme)) || pool[0];
     used.add(chosen.id);
     result.push({ questionId: chosen.id, role });
@@ -85,26 +117,25 @@ export function buildSession(bank, profile, attempts, size) {
       : ["recall", "retry", "current", "transfer", "stretch", "retry", "current", "recall", "transfer", "stretch"];
 
   pattern.forEach((role) => {
-    if (role === "retry") take(role, (q) => weak.has(q.skill)) || take(role, (q) => known.has(q.skill));
-    else if (role === "recall") take(role, (q) => known.has(q.skill));
-    else if (role === "transfer") take(role, (q) => q.purpose === "transfer" && (!strong.size || strong.has(q.skill))) || take(role, (q) => q.purpose === "transfer");
-    else if (role === "stretch") take(role, (q) => q.contentLevel === Math.min(6, targetLevel + 1)) || take(role, (q) => q.depth >= 4);
-    else take(role, (q) => !known.has(q.skill)) || take(role, () => true);
+    if (role === "retry") take(role, (question) => weak.has(question.skill)) || take(role, (question) => known.has(question.skill));
+    else if (role === "recall") take(role, (question) => known.has(question.skill));
+    else if (role === "transfer") take(role, (question) => question.purpose === "transfer" && (!strong.size || strong.has(question.skill))) || take(role, (question) => question.purpose === "transfer");
+    else if (role === "stretch") take(role, (question) => question.contentLevel >= (skillLevels.get(question.skill) || 1));
+    else take(role, (question) => !known.has(question.skill)) || take(role, () => true);
   });
-  while (result.length < size && take("current", () => true)) { /* 候補がある限り追加 */ }
+  while (result.length < size && take("current", () => true)) { /* 問題がある限り出題 */ }
   return result.slice(0, size);
 }
 
 export function buildFocusSession(bank, profile, attempts, skillId, size = 5) {
   const skill = SKILL_MAP.find((item) => item.id === skillId);
   if (!skill) return [];
-
-  const targetLevel = profile.challengeLevel ?? profile.grade;
+  const targetLevel = adaptiveLevelForSkill(skillId, bank, attempts);
   const progress = new Map(buildProgress(attempts).map((item) => [item.skill, item]));
   const recentIds = new Set(attempts.slice(-5).map((item) => item.questionId));
-  const seed = `focus:${skillId}:${targetLevel}:${attempts.length}:${size}`;
-  const candidates = bank.filter((question) => question.lab === skill.lab);
-
+  const seed = `focus:${skillId}:${attempts.length}:${size}`;
+  const skillMinimum = Math.min(...bank.filter((question) => question.skill === skillId).map((question) => question.contentLevel || 1));
+  const candidates = bank.filter((question) => question.lab === skill.lab && question.contentLevel <= Math.max(targetLevel, skillMinimum || 1));
   const ranked = stableSort(candidates, seed).sort((a, b) => {
     const score = (question) => {
       const exact = question.skill === skillId ? 1000 : 0;
@@ -117,26 +148,16 @@ export function buildFocusSession(bank, profile, attempts, skillId, size = 5) {
     };
     return score(b) - score(a);
   });
-
-  const exact = ranked.filter((question) => question.skill === skillId);
-  const related = ranked.filter((question) => question.skill !== skillId);
-  const chosen = [];
-  let exactIndex = 0;
-  while (chosen.length < size && exactIndex < exact.length) {
-    chosen.push(exact[exactIndex]);
-    exactIndex += 1;
-  }
-  for (const question of related) {
+  const chosen = ranked.filter((question) => question.skill === skillId).slice(0, size);
+  for (const question of ranked) {
     if (chosen.length >= size) break;
-    chosen.push(question);
+    if (!chosen.some((item) => item.id === question.id)) chosen.push(question);
   }
-
   return chosen.slice(0, size).map((question) => ({ questionId: question.id, role: "focus" }));
 }
-
 export function findDelayedRetry(bank, current, usedIds, level) {
   const currentTags = new Set([...(current.thinkingTags || []), ...(current.crossTags || [])]);
-  const candidates = bank.filter((q) => q.id !== current.id && !usedIds.has(q.id) && q.skill === current.skill && q.gradeMin <= level && (q.similarGroup !== current.similarGroup || q.transferGroup === current.transferGroup));
+  const candidates = bank.filter((q) => q.id !== current.id && !usedIds.has(q.id) && q.skill === current.skill && q.contentLevel <= level && (q.similarGroup !== current.similarGroup || q.transferGroup === current.transferGroup));
   return candidates.sort((a, b) => {
     const score = (question) => {
       const tags = [...(question.thinkingTags || []), ...(question.crossTags || [])];

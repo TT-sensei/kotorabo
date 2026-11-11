@@ -1,13 +1,13 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { QUESTIONS, DIAGNOSTIC_IDS, VOCABULARY_DATA } from "../js/data/questions.js";
+import { QUESTIONS, VOCABULARY_DATA } from "../js/data/questions.js";
 import { SYSTEMATIC_VOCABULARY } from "../js/data/question-sets/systematic-language.js";
 import { COMPOUND_STRUCTURE_DATA } from "../js/data/question-sets/compound-structure.js";
 import { VOCABULARY_EXPANSION_DATA } from "../js/data/question-sets/vocabulary-expansion.js";
 import { LANGUAGE_USE_DATA } from "../js/data/question-sets/language-use.js";
 import { MUNICIPAL_VOCABULARY_DATA } from "../js/data/question-sets/municipal-vocabulary.js";
 import { LABS, SKILL_MAP } from "../js/data/skill-map.js";
-import { buildDiagnosticSession, buildFocusSession, buildSession, orderQuestionOptions } from "../js/core/engine.js";
+import { adaptiveLevelForSkill, buildFocusSession, buildSession, orderQuestionOptions } from "../js/core/engine.js";
 import { BADGES, evaluateBadgeIds } from "../js/data/badges.js";
 
 test("学習ジャンルは語彙に特化した6ジャンル", () => {
@@ -37,24 +37,41 @@ test("有効な問題バンクは語彙問題だけで構成される", () => {
   assert.ok(QUESTIONS.every((question) => question.lab !== "expressions"));
 });
 
-test("診断は学年に応じて利用できる語彙ジャンルから出題する", () => {
-  const gradeSix = buildDiagnosticSession(QUESTIONS, DIAGNOSTIC_IDS, { grade:6, challengeLevel:6 });
-  assert.equal(gradeSix.length, 6);
-  assert.deepEqual(new Set(gradeSix.map((item) => QUESTIONS.find((question) => question.id === item.questionId).lab)).size, 6);
-  const gradeOne = buildDiagnosticSession(QUESTIONS, DIAGNOSTIC_IDS, { grade:1, challengeLevel:1 });
-  assert.ok(gradeOne.length >= 3);
-  assert.ok(gradeOne.every((item) => QUESTIONS.find((question) => question.id === item.questionId).contentLevel <= 1));
+test("自動難易度は各ジャンルの最もやさしい問題から始まる", () => {
+  for (const skill of SKILL_MAP) {
+    const levels = QUESTIONS.filter((question) => question.skill === skill.id).map((question) => question.contentLevel);
+    assert.equal(adaptiveLevelForSkill(skill.id, QUESTIONS, []), Math.min(...levels), skill.id);
+  }
 });
 
-test("今日のチャレンジは全学年で3・5・10問を重複なく編成できる", () => {
-  for (let grade = 1; grade <= 6; grade += 1) {
-    for (const size of [3, 5, 10]) {
-      const session = buildSession(QUESTIONS, { grade, challengeLevel:grade }, [], size);
-      assert.equal(session.length, size, `grade ${grade} / ${size}`);
-      assert.equal(new Set(session.map((item) => item.questionId)).size, size, `grade ${grade} / ${size} unique`);
-      assert.ok(session.every((item) => QUESTIONS.some((question) => question.id === item.questionId)));
-    }
-  }
+test("自動難易度は正答が続くと上がり、つまずきが続くと安定段階へ戻る", () => {
+  const sample = QUESTIONS.find((question) => question.skill === SKILL_MAP[0].id);
+  const bank = [1, 2, 3].map((contentLevel) => ({
+    ...sample, id:`adaptive-${contentLevel}`, contentLevel,
+  }));
+  const skill = sample.skill;
+  assert.equal(adaptiveLevelForSkill(skill, bank, []), 1);
+  const twoSuccesses = [1, 2].map(() => ({
+    skill, questionId:"adaptive-1", quality:"best", usedHint:false,
+  }));
+  assert.equal(adaptiveLevelForSkill(skill, bank, twoSuccesses), 2);
+  const recentMisses = [
+    ...twoSuccesses,
+    { skill, questionId:"adaptive-2", quality:"incorrect", usedHint:false },
+    { skill, questionId:"adaptive-2", quality:"incorrect", usedHint:false },
+  ];
+  assert.equal(adaptiveLevelForSkill(skill, bank, recentMisses), 1);
+  const topLevelSuccesses = [1, 2].map(() => ({
+    skill, questionId:"adaptive-3", quality:"best", usedHint:false,
+  }));
+  assert.equal(adaptiveLevelForSkill(skill, bank, topLevelSuccesses), 3);
+});
+
+test("今日のチャレンジは学年選択なしで5問を重複なく編成できる", () => {
+  const session = buildSession(QUESTIONS, {}, [], 5);
+  assert.equal(session.length, 5);
+  assert.equal(new Set(session.map((item) => item.questionId)).size, 5);
+  assert.ok(session.every((item) => QUESTIONS.some((question) => question.id === item.questionId)));
 });
 
 test("6ジャンルすべてで5問の特訓を編成できる", () => {
@@ -68,11 +85,13 @@ test("6ジャンルすべてで5問の特訓を編成できる", () => {
   }
 });
 
-test("学年とチャレンジレベルは分けて扱える", () => {
-  const session = buildSession(QUESTIONS, { grade:6, challengeLevel:1 }, [], 10);
-  const questions = session.map((item) => QUESTIONS.find((question) => question.id === item.questionId));
-  assert.ok(questions.every((question) => question.gradeMin <= 1));
-  assert.ok(questions.every((question) => question.contentLevel <= 2));
+test("初回のチャレンジは各ジャンルの入門段階から出題する", () => {
+  const session = buildSession(QUESTIONS, {}, [], 5);
+  const selected = session.map((item) => QUESTIONS.find((question) => question.id === item.questionId));
+  selected.forEach((question) => {
+    const available = QUESTIONS.filter((item) => item.skill === question.skill).map((item) => item.contentLevel);
+    assert.equal(question.contentLevel, Math.min(...available), question.id);
+  });
 });
 
 test("ことばファイルは問題で出会う語句だけを集め、問題IDと結び付く", () => {
