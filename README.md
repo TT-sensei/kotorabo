@@ -65,7 +65,7 @@
 参考資料：
 - [WEB版 小学校教科書語彙リスト](https://shogakugoi.chuta.jp/)（研究グループ公開）
 - [大阪府 小学校国語ワークブック](https://www.pref.osaka.lg.jp/o180080/shochugakko/shidou/workbookshougakkouko.html)
-- [兵庫県教育委員会「ことばの力」](https://www2.hyogo-c.ed.jp/hpe/gimu/powerofwords/)
+- [兵庫県教育委員会「ことばの力」](https://www2.hyogo-c.ed.jp/hpe/gimu/powerofwords/)（洲本市立安乎小学校の実践では、描写・要約・紹介・対話・説明・記録・報告・討論など、表現の目的別に使いたい言葉を整理）
 - [福島県「子どもの語彙を豊かにする取組」](https://kasenweb.pref.fukushima.jp/sec/70056a/yutakanagoi.html)
 - [インフィニットマインド 小学生版 語彙力簡易チェック問題](https://www.infinitemind.jp/corporation/goi-check01/)
 
