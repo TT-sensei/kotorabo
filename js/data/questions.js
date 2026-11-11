@@ -2,6 +2,7 @@ import { WORD_QUESTION_DATA } from "./question-sets/words.js";
 import { SYSTEMATIC_LANGUAGE_DATA, SYSTEMATIC_VOCABULARY } from "./question-sets/systematic-language.js";
 import { COMPOUND_STRUCTURE_DATA } from "./question-sets/compound-structure.js";
 import { VOCABULARY_EXPANSION_DATA } from "./question-sets/vocabulary-expansion.js";
+import { LANGUAGE_USE_DATA } from "./question-sets/language-use.js";
 import { LABS } from "./skill-map.js";
 
 // ことラボで扱うのは語彙・表現に関する問題だけです。
@@ -55,6 +56,7 @@ const rawPairs = [
   ...SYSTEMATIC_LANGUAGE_DATA.map(normalizeLegacyPair),
   ...COMPOUND_STRUCTURE_DATA,
   ...VOCABULARY_EXPANSION_DATA,
+  ...LANGUAGE_USE_DATA,
 ].filter(Boolean);
 
 export const QUESTIONS = rawPairs.map(([id, data]) => make(id, data));
