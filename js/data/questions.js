@@ -18,7 +18,8 @@ const categoryFor = (skill, subskill = "") => {
     if (/動作語/.test(subskill)) return "sensory";
     return "precise";
   }
-  if (skill === "words.abstract_objective" || skill === "words.learning_terms") return "meaning";
+  if (skill === "words.learning_terms") return "learning";
+  if (skill === "words.abstract_objective") return "meaning";
   if (skill === "words.semantic_groups") {
     if (/動き|音|様子/.test(subskill)) return "sensory";
     return "meaning";
