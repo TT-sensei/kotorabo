@@ -43,9 +43,14 @@ const labInfo = [
   ["structure","成り立ち","paraphrase","knowledge"],
 ];
 
+const labBadges = labInfo.flatMap(([lab, label, japaneseImage, commonImage]) => [
+  { id:`lab-${lab}-growing`, lab, stage:"growing", title:`${label} 成長中`, description:`${label}ジャンルで5つの問題に取り組んだ。`, image:japanese(japaneseImage) },
+  { id:`lab-${lab}-transfer`, lab, stage:"transfer", title:`${label} 使いこなし`, description:`${label}ジャンルで深く考え、別の場面にも挑戦した。`, image:common(commonImage) },
+]);
+
 const rankBadges = [
-  [2,"ひらめき研究員","new-skill"], [4,"文づくり研究員","level-up"],
-  [6,"伝える博士","knowledge"], [8,"ことば大名人","mastery"], [10,"ことばラボ所長","champion"],
+  [2,"ひらめき研究員","new-skill"], [4,"ことば発見研究員","level-up"],
+  [6,"語彙の研究博士","knowledge"], [8,"ことば大名人","mastery"], [10,"ことばラボ所長","champion"],
 ].map(([rank, title, image]) => ({ id:`rank-${rank}`, rank, title, description:`研究者レベル${rank}に到達した。`, image:common(image) }));
 
 export const BADGES = [...processBadges, ...skillBadges, ...labBadges, ...rankBadges];
