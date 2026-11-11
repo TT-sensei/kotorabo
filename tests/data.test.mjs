@@ -115,7 +115,17 @@ test("新しい語彙60問は6ジャンルに均等に追加される", () => {
   });
 });
 
-test("文脈で使う語彙問題は独自作成され、学びの観点が付いている", () => {\n  assert.equal(LANGUAGE_USE_DATA.length, 12);\n  const lenses = new Set(LANGUAGE_USE_DATA.map(([, question]) => question.learningLens));\n  assert.deepEqual(lenses, new Set(["treasure", "dialogue", "academic", "structure"]));\n  LANGUAGE_USE_DATA.forEach(([id, question]) => {\n    assert.equal(question.purpose, "transfer", id);\n    assert.ok(question.context && question.vocabularyTerm && question.vocabularyMeaning && question.vocabularyExample, id);\n  });\n});\n\ntest("選択肢の並び替えは再現可能", () => {
+test("文脈で使う語彙問題は独自作成され、学びの観点が付いている", () => {
+  assert.equal(LANGUAGE_USE_DATA.length, 12);
+  const lenses = new Set(LANGUAGE_USE_DATA.map(([, question]) => question.learningLens));
+  assert.deepEqual(lenses, new Set(["treasure", "dialogue", "academic", "structure"]));
+  LANGUAGE_USE_DATA.forEach(([id, question]) => {
+    assert.equal(question.purpose, "transfer", id);
+    assert.ok(question.context && question.vocabularyTerm && question.vocabularyMeaning && question.vocabularyExample, id);
+  });
+});
+
+test("選択肢の並び替えは再現可能", () => {
   const sample = QUESTIONS[0];
   assert.deepEqual(orderQuestionOptions(sample), orderQuestionOptions(sample));
 });
