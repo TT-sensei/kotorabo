@@ -18,7 +18,7 @@ test("学習ジャンルは語彙に特化した6ジャンル", () => {
 });
 
 test("有効な問題バンクは語彙問題だけで構成される", () => {
-  assert.equal(QUESTIONS.length, 324);
+  assert.equal(QUESTIONS.length, 364);
   assert.equal(VOCABULARY_EXPANSION_DATA.length, 60);
   assert.equal(MUNICIPAL_VOCABULARY_DATA.length, 126);
   assert.equal(new Set(QUESTIONS.map((question) => question.id)).size, QUESTIONS.length);
@@ -122,7 +122,11 @@ test("直近の問題が多くても特訓の問題数を確保する", () => {
 
 test("初回のチャレンジは各ジャンルの入門段階から出題する", () => {
   const session = buildSession(QUESTIONS, {}, [], 5);
-  const selected = session.map((item) => QUESTIONS.find((question) => question.id === item.questionId));
+  // stretch は設計上「適応レベルより少し上」を1問だけ試す役割なので、入門段階の対象から外す。
+  // （stretch の一段上は、別のテスト「チャレンジのstretchは可能な場合に適応レベルより一段上を出す」で担保する）
+  const selected = session
+    .filter((item) => item.role !== "stretch")
+    .map((item) => QUESTIONS.find((question) => question.id === item.questionId));
   selected.forEach((question) => {
     const available = QUESTIONS.filter((item) => item.skill === question.skill).map((item) => item.contentLevel);
     assert.equal(question.contentLevel, Math.min(...available), question.id);
@@ -236,7 +240,7 @@ test("正解の表示位置は4か所に偏りなく分散する", () => {
 });
 
 test("達成バッジは6ジャンルに対応し、学習過程も評価する", () => {
-  assert.equal(BADGES.length, 14);
+  assert.equal(BADGES.length, 33);
   assert.equal(new Set(BADGES.map((badge) => badge.id)).size, BADGES.length);
   assert.equal(BADGES.filter((badge) => badge.id.startsWith("skill-")).length, 6);
   const sampleQuestion = QUESTIONS.find((question) => question.purpose === "transfer");

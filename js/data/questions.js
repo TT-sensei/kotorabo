@@ -5,6 +5,8 @@ import { VOCABULARY_EXPANSION_DATA } from "./question-sets/vocabulary-expansion.
 import { LANGUAGE_USE_DATA } from "./question-sets/language-use.js";
 import { MUNICIPAL_VOCABULARY_DATA } from "./question-sets/municipal-vocabulary.js";
 import { EARLY_VOCABULARY_DATA } from "./question-sets/early-vocabulary.js";
+import { LOW_GRADE_DATA } from "./question-sets/low-grade.js";
+import { TRANSFER_PLUS_DATA } from "./question-sets/transfer-plus.js";
 import { LABS } from "./skill-map.js";
 
 // ことラボで扱うのは語彙・表現に関する問題だけです。
@@ -61,6 +63,8 @@ const rawPairs = [
   ...LANGUAGE_USE_DATA,
   ...MUNICIPAL_VOCABULARY_DATA,
   ...EARLY_VOCABULARY_DATA,
+  ...LOW_GRADE_DATA,
+  ...TRANSFER_PLUS_DATA,
 ].filter(Boolean);
 
 export const QUESTIONS = rawPairs.map(([id, data]) => make(id, data));

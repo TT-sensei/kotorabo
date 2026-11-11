@@ -12,6 +12,9 @@
 | `vocabulary-expansion.js` | 6ジャンルに追加した独自語彙60問 |
 | `language-use.js` | 文脈に合わせて言葉を選ぶ独自問題12問 |
 | `municipal-vocabulary.js` | 教科横断の文脈を使った独自語彙126問 |
+| `early-vocabulary.js` | 入門語彙36問（L1・L2中心、6ジャンル各6問） |
+| `low-grade.js` | 低学年（レベル1・2）の土台を厚くする24問。レベル1はひらがな中心 |
+| `transfer-plus.js` | 1問だけだった語を別の文脈で確かめるtransfer問題10問と、acceptableで程度の違いを学ぶ感覚の新語6問 |
 | `early-vocabulary.js` | L1・L2を中心にした入門語彙36問（6ジャンル各6問） |
 
 旧版の `sentence.js`、`connection.js`、`passage.js`、`connectives-extra.js` は、現在の問題バンクに読み込みません。ことわざ・慣用句・故事成語は専用アプリ「ことばのしるべ」に集約し、ことラボの有効な問題バンクには含めません。
