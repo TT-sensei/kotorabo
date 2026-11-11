@@ -4,11 +4,12 @@ const SITE = "https://tt-sensei.github.io/navi-character-";
 
 export const NAVI = Object.freeze({
   groupStudying: `${ROOT}/groups/group-studying.webp`,
-  // トップのヒーロー用：3〜4人の場面イラスト（原本PNG）を読み込みごとに切り替える
+  // トップのヒーロー用：ことばの学びに合う場面イラストを読み込みごとに切り替える
+  // group-learning-pair-* は原本PNGがサーバー上で壊れているためweb版を使う
   heroScenes: [
-    `${SITE}/assets/groups/learning/trio-learning-discussion-riku-saku-kai.png`,
-    `${SITE}/assets/groups/learning/pair-learning-tablet-sora-nami.png`,
-    `${SITE}/assets/groups/learning/pair-learning-ruler-sora-riku.png`,
+    `${ROOT}/groups/learning/group-learning-pair-reading.webp`,
+    `${ROOT}/groups/learning/group-learning-pair-diagram.webp`,
+    `${SITE}/assets/groups/learning/pair-learning-readaloud-saku-nami.png`,
   ],
   start: `${ROOT}/characters/sora/fullbody/waving.webp`,
   correct: `${ROOT}/characters/tsuki/fullbody/correct.webp`,
