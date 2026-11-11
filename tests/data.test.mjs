@@ -117,6 +117,9 @@ test("初回のチャレンジは各ジャンルの入門段階から出題す�
 
 test("ことばファイルは問題で出会う語句だけを集め、問題IDと結び付く", () => {
   assert.ok(VOCABULARY_DATA.length >= 170);
+  assert.ok(VOCABULARY_DATA.every((word) => word.contentLevel >= 1 && word.contentLevel <= 6));
+  assert.ok(VOCABULARY_DATA.every((word) => word.levelLabel === `内容L${word.contentLevel}`));
+  assert.ok(VOCABULARY_DATA.every((word) => !Object.hasOwn(word, "gradeBand") && !Object.hasOwn(word, "gradeMin")));
   assert.equal(new Set(VOCABULARY_DATA.map((word) => word.id)).size, VOCABULARY_DATA.length);
   const ids = new Set(QUESTIONS.map((question) => question.id));
   VOCABULARY_DATA.forEach((word) => {
